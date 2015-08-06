@@ -218,10 +218,10 @@ class TestPerfController(ControllerBase):
     """Should only be used to link WSGI to the performance stats"""
     def __init__(self, req, link, data, **config):
         super(TestPerfController, self).__init__(req, link, data, **config)
+        print('creating testperfcontroller')
         
         self.performance_app = data['performance_app'] 
                                          # used to access the functions available in the performance API?
-        print('created testperfcontroller')
         
     @websocket('performance','/v1.0/performance/ws')
     def get_performance_ws(self, ws):
