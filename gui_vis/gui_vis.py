@@ -62,7 +62,7 @@ class GUIServerController(ControllerBase):
             req.path_info = kwargs['filename']
         return self.static_app(req)
         
-app_manager.require_app('ryu.app.simple_switch_13') # Causes chaos to ensue
+# app_manager.require_app('ryu.app.simple_switch_13') # Causes chaos to ensue
 app_manager.require_app('ryu.app.perfte')
 app_manager.require_app('ryu.app.rest_topology')
 app_manager.require_app('ryu.app.ws_topology')
