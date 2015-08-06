@@ -1,0 +1,43 @@
+{
+  "0000000000000001": [
+    {"arrival": 0.8, "rx_packets": 8, "tx_packets": 8, "service": 1.0, "port_no": 1}, 
+    {"arrival": 1.0, "rx_packets": 15, "tx_packets": 8, "service": 1.0, "port_no": 2}, 
+    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+  ], 
+  "0000000000000002": [
+    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 8, "service": 1.0, "port_no": 1}, 
+    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 8, "service": 1.0, "port_no": 2}, 
+    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 8, "service": 0.8, "port_no": 3}, 
+    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+  ], 
+  "0000000000000003": [
+    {"arrival": 0.0, "rx_packets": 11, "tx_packets": 8, "service": 1.0, "port_no": 1}, 
+    {"arrival": 0.0, "rx_packets": 11, "tx_packets": 8, "service": 1.0, "port_no": 2}, 
+    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 8, "service": 1.0, "port_no": 3}, 
+    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+  ], 
+  "0000000000000004": [
+    {"arrival": 0.0, "rx_packets": 11, "tx_packets": 8, "service": 1.0, "port_no": 1}, 
+    {"arrival": 0.0, "rx_packets": 11, "tx_packets": 8, "service": 1.0, "port_no": 2}, 
+    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 8, "service": 1.0, "port_no": 3}, 
+    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+  ], 
+  "0000000000000005": [
+    {"arrival": 1.0, "rx_packets": 15, "tx_packets": 16, "service": 1.0, "port_no": 1}, 
+    {"arrival": 1.0, "rx_packets": 15, "tx_packets": 16, "service": 1.0, "port_no": 2}, 
+    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 15, "service": 1.0, "port_no": 3}, 
+    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+  ], 
+  "0000000000000006": [
+    {"arrival": 0.0, "rx_packets": 11, "tx_packets": 15, "service": 1.0, "port_no": 1}, 
+    {"arrival": 0.0, "rx_packets": 10, "tx_packets": 15, "service": 1.0, "port_no": 2}, 
+    {"arrival": 1.0, "rx_packets": 16, "tx_packets": 15, "service": 1.0, "port_no": 3}, 
+    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+  ], 
+  "0000000000000007": [
+    {"arrival": 0.0, "rx_packets": 10, "tx_packets": 15, "service": 1.0, "port_no": 1}, 
+    {"arrival": 0.0, "rx_packets": 10, "tx_packets": 15, "service": 1.0, "port_no": 2}, 
+    {"arrival": 1.0, "rx_packets": 16, "tx_packets": 15, "service": 1.0, "port_no": 3}, 
+    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+  ]
+}
