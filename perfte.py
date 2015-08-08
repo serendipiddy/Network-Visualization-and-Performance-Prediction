@@ -130,13 +130,13 @@ class TestPerfServerApp(app_manager.RyuApp):
           # find the difference between current and old stats
           if (previous_port_data == self.placeholder):
             duration = p['duration_sec']
-            port_stats['arrival'] = float(p['rx_packets'])/duration
-            port_stats['depart'] = float(p['tx_packets'])/duration
+            port_stats['arrival_rate'] = float(p['rx_packets'])/duration
+            port_stats['depart_rate'] = float(p['tx_packets'])/duration
           else:
             prev_data = previous_port_data[port_no]
             duration = p['duration_sec'] - prev_data['duration_sec']
-            port_stats['arrival'] = float(p['rx_packets'] - prev_data['rx_packets'])/duration
-            port_stats['depart'] = float(p['tx_packets'] - prev_data['tx_packets'])/duration
+            port_stats['arrival_rate'] = float(p['rx_packets'] - prev_data['rx_packets'])/duration
+            port_stats['depart_rate'] = float(p['tx_packets'] - prev_data['tx_packets'])/duration
           
           port_stats['tx_packets'] = p['tx_packets']
           port_stats['rx_packets'] = p['rx_packets']

@@ -13,45 +13,45 @@ var CONF = {
 
 var sample = {
   "0000000000000001": [
-    {"arrival": 0.8, "rx_packets": 8, "tx_packets": 8, "service": 1.0, "port_no": 1}, 
-    {"arrival": 1.0, "rx_packets": 15, "tx_packets": 8, "service": 1.0, "port_no": 2}, 
-    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+    {"arrival_rate": 0.8, "rx_packets": 8, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 1}, 
+    {"arrival_rate": 1.0, "rx_packets": 15, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 2}, 
+    {"arrival_rate": 0.0, "rx_packets": 0, "tx_packets": 0, "depart_rate_rate": 0.0, "port_no": 4294967294}
   ], 
   "0000000000000002": [
-    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 8, "service": 1.0, "port_no": 1}, 
-    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 8, "service": 1.0, "port_no": 2}, 
-    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 8, "service": 0.8, "port_no": 3}, 
-    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+    {"arrival_rate": 1.0, "rx_packets": 8, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 1}, 
+    {"arrival_rate": 1.0, "rx_packets": 8, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 2}, 
+    {"arrival_rate": 1.0, "rx_packets": 8, "tx_packets": 8, "depart_rate_rate": 0.8, "port_no": 3}, 
+    {"arrival_rate": 0.0, "rx_packets": 0, "tx_packets": 0, "depart_rate_rate": 0.0, "port_no": 4294967294}
   ], 
   "0000000000000003": [
-    {"arrival": 0.0, "rx_packets": 11, "tx_packets": 8, "service": 1.0, "port_no": 1}, 
-    {"arrival": 0.0, "rx_packets": 11, "tx_packets": 8, "service": 1.0, "port_no": 2}, 
-    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 8, "service": 1.0, "port_no": 3}, 
-    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+    {"arrival_rate": 0.0, "rx_packets": 11, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 1}, 
+    {"arrival_rate": 0.0, "rx_packets": 11, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 2}, 
+    {"arrival_rate": 1.0, "rx_packets": 8, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 3}, 
+    {"arrival_rate": 0.0, "rx_packets": 0, "tx_packets": 0, "depart_rate_rate": 0.0, "port_no": 4294967294}
   ], 
   "0000000000000004": [
-    {"arrival": 0.0, "rx_packets": 11, "tx_packets": 8, "service": 1.0, "port_no": 1}, 
-    {"arrival": 0.0, "rx_packets": 11, "tx_packets": 8, "service": 1.0, "port_no": 2}, 
-    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 8, "service": 1.0, "port_no": 3}, 
-    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+    {"arrival_rate": 0.0, "rx_packets": 11, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 1}, 
+    {"arrival_rate": 0.0, "rx_packets": 11, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 2}, 
+    {"arrival_rate": 1.0, "rx_packets": 8, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 3}, 
+    {"arrival_rate": 0.0, "rx_packets": 0, "tx_packets": 0, "depart_rate_rate": 0.0, "port_no": 4294967294}
   ], 
   "0000000000000005": [
-    {"arrival": 1.0, "rx_packets": 15, "tx_packets": 16, "service": 1.0, "port_no": 1}, 
-    {"arrival": 1.0, "rx_packets": 15, "tx_packets": 16, "service": 1.0, "port_no": 2}, 
-    {"arrival": 1.0, "rx_packets": 8, "tx_packets": 15, "service": 1.0, "port_no": 3}, 
-    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+    {"arrival_rate": 1.0, "rx_packets": 15, "tx_packets": 16, "depart_rate_rate": 1.0, "port_no": 1}, 
+    {"arrival_rate": 1.0, "rx_packets": 15, "tx_packets": 16, "depart_rate_rate": 1.0, "port_no": 2}, 
+    {"arrival_rate": 1.0, "rx_packets": 8, "tx_packets": 15, "depart_rate_rate": 1.0, "port_no": 3}, 
+    {"arrival_rate": 0.0, "rx_packets": 0, "tx_packets": 0, "depart_rate_rate": 0.0, "port_no": 4294967294}
   ], 
   "0000000000000006": [
-    {"arrival": 0.0, "rx_packets": 11, "tx_packets": 15, "service": 1.0, "port_no": 1}, 
-    {"arrival": 0.0, "rx_packets": 10, "tx_packets": 15, "service": 1.0, "port_no": 2}, 
-    {"arrival": 1.0, "rx_packets": 16, "tx_packets": 15, "service": 1.0, "port_no": 3}, 
-    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+    {"arrival_rate": 0.0, "rx_packets": 11, "tx_packets": 15, "depart_rate_rate": 1.0, "port_no": 1}, 
+    {"arrival_rate": 0.0, "rx_packets": 10, "tx_packets": 15, "depart_rate_rate": 1.0, "port_no": 2}, 
+    {"arrival_rate": 1.0, "rx_packets": 16, "tx_packets": 15, "depart_rate_rate": 1.0, "port_no": 3}, 
+    {"arrival_rate": 0.0, "rx_packets": 0, "tx_packets": 0, "depart_rate_rate": 0.0, "port_no": 4294967294}
   ], 
   "0000000000000007": [
-    {"arrival": 0.0, "rx_packets": 10, "tx_packets": 15, "service": 1.0, "port_no": 1}, 
-    {"arrival": 0.0, "rx_packets": 10, "tx_packets": 15, "service": 1.0, "port_no": 2}, 
-    {"arrival": 1.0, "rx_packets": 16, "tx_packets": 15, "service": 1.0, "port_no": 3}, 
-    {"arrival": 0.0, "rx_packets": 0, "tx_packets": 0, "service": 0.0, "port_no": 4294967294}
+    {"arrival_rate": 0.0, "rx_packets": 10, "tx_packets": 15, "depart_rate_rate": 1.0, "port_no": 1}, 
+    {"arrival_rate": 0.0, "rx_packets": 10, "tx_packets": 15, "depart_rate_rate": 1.0, "port_no": 2}, 
+    {"arrival_rate": 1.0, "rx_packets": 16, "tx_packets": 15, "depart_rate_rate": 1.0, "port_no": 3}, 
+    {"arrival_rate": 0.0, "rx_packets": 0, "tx_packets": 0, "depart_rate_rate": 0.0, "port_no": 4294967294}
   ]
 };
 
@@ -433,7 +433,7 @@ var rpc = {
             var sum = 0;
             newStats = stats[d.dpid]
             for (var i = 0; i < newStats.length; i++) {
-              var rx = newStats[i].arrival;
+              var rx = newStats[i].arrival_rate;
               sum = sum + rx;
             }
             return String.fromCharCode(parseInt("03BB",16))+":   "+sum; 
@@ -446,8 +446,8 @@ var rpc = {
             
             for (var i = 0; i < newStats.length; i++) {
               if (newStats[i].port_no = 4294967294) {
-                tx = newStats[i].depart; // need to put it elsewhere
-                rx = newStats[i].arrival;
+                tx = newStats[i].depart_rate; // need to put it elsewhere
+                rx = newStats[i].arrival_rate;
               }
             }
             return "to_ctrl:   "+tx; 
