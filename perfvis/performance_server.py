@@ -3,6 +3,7 @@ import json
 
 from ryu.app.wsgi import ControllerBase, route, websocket, WebSocketRPCClient
 from webob.static import DirectoryApp
+from webob import Response
 
 PATH = os.path.dirname(__file__)
 

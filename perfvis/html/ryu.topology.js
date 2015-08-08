@@ -67,6 +67,8 @@ ws.onmessage = function(event) {
 }
 
 var glob = "";
+var lambda_char = String.fromCharCode(parseInt("03BB",16));
+var controller_port = 4294967294;
 
 /* For receiving performance information */
 // current_stats = "";
@@ -79,18 +81,15 @@ ws.onmessage = function(event) {
     glob = event;
     
     console.log("Method:"+data.method);
-    // console.log("params:"+JSON.stringify(data.params[0]));
 
     // create and send RPC reply
     var result = "";
     try {
-      result = rpc[data.method](data.params[0]);
+      result = model_[data.method](data.params[0]);
     } catch(err) {console.log("ERROR"+err);}
     
     var ret = {"id": data.id, "jsonrpc": "2.0", "result": result};
-    // console.log("NOTE Returning dummy result, because result is undefined:");
-    // console.log("Result => "+JSON.stringify(result));
-    console.log(JSON.stringify(ret));
+    console.log("Ret: ",JSON.stringify(ret));
     this.send(JSON.stringify(ret));
 }
 
@@ -123,7 +122,7 @@ function _tick() {
         .attr("y2", function(d) { return d.target.y; });
 
     elem.node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-    elem.stats.attr("transform", function(d) { return "translate(" + d.node.x + "," + d.node.y + ")"; });
+    elem.stats.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
     elem.port.attr("transform", function(d) {
         var p = topo.get_port_point(d);
         return "translate(" + p.x + "," + p.y + ")";
@@ -170,11 +169,13 @@ elem.update = function () {
         .links(topo.links)
         .start();
 
+    /* Links */
     this.link = this.link.data(topo.links);
     this.link.exit().remove();
     this.link.enter().append("line")
         .attr("class", "link");
 
+    /* Switches */
     this.node = this.node.data(topo.nodes);
     this.node.exit().remove();
     var nodeEnter = this.node.enter().append("g")
@@ -193,33 +194,33 @@ elem.update = function () {
         .text(function(d) { return "dpid: " + trim_zero(d.dpid); });
 
     /* Statistics */
-    // redrawStats("undefined");
     this.stats = this.stats
-      .data(process_data(topo.nodes,"undefined"));
-    // this.stats.exit().remove();
+      .data(topo.nodes);
+      // .data(process_data(topo.nodes,"undefined"));
     var statEnter = this.stats.enter().append("g")
         .attr("class","stats"); // this is where the interactivity will be added
-    statEnter.append("text")
-        .attr("class","dpid")
+    statEnter.append("text").attr("class","dpid")
         .attr("x",30)
         .attr("y",-20)
         .text(function(d) {return "dpid:"+dpid_to_int(d.dpid);});
-    statEnter.append("text")
-        .attr("class","rx_packets")
+    statEnter.append("text").attr("class","rx_packets")
         .attr("x",30)
         .attr("y",-5)
         .text("Rx:  (loading..)");
-     statEnter.append("text")
-        .attr("class","lambda")
+    statEnter.append("text").attr("class","lambda")
         .attr("x",30)
         .attr("y",10)
-        .text(String.fromCharCode(parseInt("03BB",16))+": (loading..)");
-    statEnter.append("text")
-        .attr("class","controllerTx")
+        .text(lambda_char+": (loading..)");
+    statEnter.append("text").attr("class","controllerTx")
         .attr("x",30)
         .attr("y",25)
         .text("to_ctrl: (loading..)");
+    statEnter.append("text").attr("class","sojourn")
+        .attr("x",30)
+        .attr("y",40)
+        .text("sojourn: (loading..)");
         
+    /* Ports */
     var ports = topo.get_ports();
     this.port.remove();
     
@@ -233,24 +234,6 @@ elem.update = function () {
         .attr("dy", 3)
         .text(function(d) { return trim_zero(d.port_no)+" "; });
 };
-
-function process_data(nodes, stats) {
-    var rt = [];
-    for (var i = 0; i < nodes.length;  i++) {
-      var dp = nodes[i].dpid;
-      // console.log("====== <Processing: ====== \n"+JSON.stringify(stats)+"\n====== Processing/> ======");
-      var t = {
-        "dpid": dp, 
-        "stats": (!(stats === "undefined") ? stats[dp] : []),
-        "node": nodes[i]  // Cheating, might fix this later
-      };
-      rt.push(t);
-      // console.log(JSON.stringify(t));
-    }
-    // console.log("processed: \n"+rt.valueOf());
-    // console.log("processed: \n"+JSON.stringify(rt));
-    return rt;
-}
 
 function is_valid_link(link) {
     return (link.src.dpid < link.dst.dpid)
@@ -401,67 +384,96 @@ var rpc = {
         elem.update();
         return "";
     },
-    event_update_statistics: function(stats) {
-        console.log("updating statistics");
+}
+
+var model_ = {
+    model_nodes: {}, 
+    var process_stats: function process_data(nodes, stats) {
+        /* Create this.model_nodes */
+        for (s in stats) {
+          model_nodes[s] = {};
+        }
         
-        var current_stats = stats;
-        // console.log("Updating: "+(current_stats));
-        var current_processed = process_data(topo.nodes,current_stats);
-        elem.stats
-          .data(current_processed);
+        if (nodes.length != model_nodes.length) {
+          console.log("error, node and stat lengths differ");
+          return 0;
+        }
         
-        /* 
-          Trying to get the .tx_packets displaying. It's hidden behind a [], an entry for each port
-          of course.. so sum the tx_packets for each port, return the result..!
+        // TODO add one node for the controller
+        
+        /* Populate the node structure with the ports info?       >>>  LLINK */
+        for (var i = 0; i < nodes.length; i++) { 
+          var dpid = nodes[i].dpid;
+          var n = {};  // for each node
+          data = stats[dpid]; // data = {"arrival_rate": 0.8, "rx_packets": 8, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 1}, 
           
-          Yup, works now..
+          // for now, simply aggregate the stats of each switch
           
-          except, .data is not updating in the HTML/SVG
-        */
-        // console.log("Updating stats:"+JSON.stringify(current_processed));
-        
-        elem.stats.selectAll(".dpid")
-          .text(function(d) { return "dpid: "+dpid_to_int(d.dpid); });
-        elem.stats.selectAll(".rx_packets")
-          .text(function(d) { 
-            var sum = 0;
-            data = stats[d.dpid];
-            // console.log("data:"+JSON.stringify(d.stats) +" "+d.stats.length);
-            for (var i = 0; i < data.length; i++) {
-              // console.log("port:"+JSON.stringify( data[i] ));
-              var rx = data[i].rx_packets;
-              // console.log("rx:"+JSON.stringify( rx ) + " " + (typeof rx));
-              sum = sum + rx;
-            }
-            return "Rx:  "+sum.toFixed(2); 
-          });
-        elem.stats.selectAll(".lambda")
-          .text(function(d) { 
-            var sum = 0;
-            newStats = stats[d.dpid]
-            for (var i = 0; i < newStats.length; i++) {
-              var rx = newStats[i].arrival_rate;
-              sum = sum + rx;
-            }
-            return String.fromCharCode(parseInt("03BB",16))+":   "+sum.toFixed(2); 
-          });
-        elem.stats.selectAll(".controllerTx")
-          .text(function(d) { 
-            var tx = 0;
-            var rx = 0;
-            newStats = stats[d.dpid];
+          n.arrival_rate = 0;
+          n.depart_rate  = 0;
+          n.rx = 0;
+          n.tx = 0;
+          
+          /* Compute this in the model itself.. pass it the ports to deal with!        <<< LLINK */
+          for (var p = 0; p < data.length; p++) {
+            n.arrival_rate += data[i].arrival_rate;
+            n.depart_rate  += data[i].depart_rate;
+            n.rx           += data[i].rx_packets;
+            n.tx           += data[i].tx_packets;
             
-            for (var i = 0; i < newStats.length; i++) {
-              if (newStats[i].port_no = 4294967294) {
-                tx = newStats[i].depart_rate; // need to put it elsewhere
-                rx = newStats[i].arrival_rate;
-              }
+            if (data[i].port_no === controller_port) {
+              n.controller = {"to": data[i].depart_rate, "from": data[i].arrival_rate,};
             }
-            return "to_ctrl:   "+tx; 
-          });
+          }
+          
+          /* Apply the model */
+          model = new mm1();
+          n.sojourn = model.sojourn(n.arrival_rate, n.depart_rate);
+          n.length = model.length(n.arrival_rate, n.depart_rate);
+          n.load = model.rho(n.arrival_rate, n.depart_rate);
+          
+          model_nodes[dpid] = n;
+        }
+        return model_nodes;
+    }
+    var update_gui: function(data) {
+        elem.stats
+            .selectAll(".dpid")
+            .text(  function(d) {
+                return "dpid:    "+dpid_to_int(d.dpid);                         });
+        elem.stats
+            .selectAll(".rx_packets")
+            .text(  function(d) { 
+                return "Rx:      "+data[d.dpid].rx.toFixed(2);          });
+        elem.stats
+            .selectAll(".lambda")
+            .text(  function(d) { 
+                return lambda_char+":   "+data[d.dpid].arrival_rate.toFixed(2); });
+        elem.stats
+            .selectAll(".controllerTx")
+            .text(  function(d) { 
+                return "to_ctrl: "+data[d.dpid].depart_rate.toFixed(2);         });
+        elem.stats
+            .selectAll(".sojourn")
+            .text(  function(d) { 
+                return "from_ctrl:   "+data[i].sojourn.toFixed(2);         });
+    }
+    event_update_statistics: function(new_stats) {
+        console.log("Updating statistics");
+        
+        /* Apply the model */
+        model_data = this.process_data(topo.nodes, new_stats);
+        
+        if (model_data === 0) 
+          return "";
+        
+        /* Update the displayed data */
+        update_gui(model_data);
+        
         return "";
     },
 }
+
 
 function initialize_topology() {
     d3.json("/v1.0/topology/switches", function(error, switches) {
