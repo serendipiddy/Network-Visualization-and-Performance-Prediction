@@ -67,8 +67,10 @@ ws.onmessage = function(event) {
 }
 
 var glob = "";
-var lambda_char = String.fromCharCode(parseInt("03BB",16));
-var controller_port = 4294967294;
+var LAM = String.fromCharCode(parseInt("03BB",16));
+var MU = String.fromCharCode(parseInt("03BC",16));
+var CTRL_PORT = 4294967294;
+var NOT_READY = -1;
 
 /* For receiving performance information */
 // current_stats = "";
@@ -200,25 +202,26 @@ elem.update = function () {
     var statEnter = this.stats.enter().append("g")
         .attr("class","stats"); // this is where the interactivity will be added
     statEnter.append("text").attr("class","dpid")
-        .attr("x",30)
-        .attr("y",-20)
-        .text(function(d) {return "dpid:"+dpid_to_int(d.dpid);});
+        .attr("x",30).attr("y",-20).text(function(d) {return "dpid:"+dpid_to_int(d.dpid);});
     statEnter.append("text").attr("class","rx_packets")
-        .attr("x",30)
-        .attr("y",-5)
-        .text("Rx:  (loading..)");
+        .attr("x",30).attr("y",-5).text("Rx:  (loading..)");
+        
     statEnter.append("text").attr("class","lambda")
-        .attr("x",30)
-        .attr("y",10)
-        .text(lambda_char+": (loading..)");
+        .attr("x",30).attr("y",10).text(LAM+": (loading..)");
+    statEnter.append("text").attr("class","mu")
+        .attr("x",80).attr("y",10).text(MU+": (loading..)");
+        
     statEnter.append("text").attr("class","controllerTx")
-        .attr("x",30)
-        .attr("y",25)
-        .text("to_ctrl: (loading..)");
+        .attr("x",30).attr("y",25).text("to_ctrl: (loading..)");
+    statEnter.append("text").attr("class","controllerRx")
+        .attr("x",30).attr("y",40).text("frm_ctrl: (loading..)");
+        
     statEnter.append("text").attr("class","sojourn")
-        .attr("x",30)
-        .attr("y",40)
-        .text("sojourn: (loading..)");
+        .attr("x",30).attr("y",55).text("sojourn: (loading..)");
+    statEnter.append("text").attr("class","load")
+        .attr("x",30).attr("y",70).text("load: (loading..)");
+    statEnter.append("text").attr("class","bufflen")
+        .attr("x",30).attr("y",85).text("length: (loading..)");
         
     /* Ports */
     var ports = topo.get_ports();
@@ -388,15 +391,17 @@ var rpc = {
 
 var model_ = {
     model_nodes: {}, 
-    var process_stats: function process_data(nodes, stats) {
+    process_stats: function (nodes, stats) {
         /* Create this.model_nodes */
+        var mn_length = 0;
         for (s in stats) {
-          model_nodes[s] = {};
+          this.model_nodes[s] = {};
+          mn_length++;
         }
         
-        if (nodes.length != model_nodes.length) {
+        if (nodes.length != mn_length) {
           console.log("error, node and stat lengths differ");
-          return 0;
+          return NOT_READY;
         }
         
         // TODO add one node for the controller
@@ -407,7 +412,11 @@ var model_ = {
           var n = {};  // for each node
           data = stats[dpid]; // data = {"arrival_rate": 0.8, "rx_packets": 8, "tx_packets": 8, "depart_rate_rate": 1.0, "port_no": 1}, 
           
-          // for now, simply aggregate the stats of each switch
+          console.log("Processing node "+dpid);
+          if (data === "loading")
+            return NOT_READY;
+          
+          // TODO for now, simply aggregate the stats of each switch
           
           n.arrival_rate = 0;
           n.depart_rate  = 0;
@@ -415,60 +424,84 @@ var model_ = {
           n.tx = 0;
           
           /* Compute this in the model itself.. pass it the ports to deal with!        <<< LLINK */
+          console.log("  Processing ports: ");
           for (var p = 0; p < data.length; p++) {
-            n.arrival_rate += data[i].arrival_rate;
-            n.depart_rate  += data[i].depart_rate;
-            n.rx           += data[i].rx_packets;
-            n.tx           += data[i].tx_packets;
+            console.log("    port: "+data[p].port_no);
+            n.port_no      += data[p].port_no;
+            n.arrival_rate += data[p].arrival_rate;
+            n.depart_rate  += data[p].depart_rate;
+            n.rx           += data[p].rx_packets;
+            n.tx           += data[p].tx_packets;
             
-            if (data[i].port_no === controller_port) {
-              n.controller = {"to": data[i].depart_rate, "from": data[i].arrival_rate,};
+            if (data[p].port_no === CTRL_PORT) {
+              n.controller = {
+                "to":        data[p].tx_packets, 
+                "from":      data[p].rx_packets,
+                "to_rate":   data[p].depart_rate,
+                "from_rate": data[p].arrive_rate,
+              };
             }
           }
           
           /* Apply the model */
           model = new mm1();
-          n.sojourn = model.sojourn(n.arrival_rate, n.depart_rate);
-          n.length = model.length(n.arrival_rate, n.depart_rate);
-          n.load = model.rho(n.arrival_rate, n.depart_rate);
+          n.sojourn = model.sojourn (n.arrival_rate, n.depart_rate);
+          n.buflen  = model.length (n.arrival_rate, n.depart_rate);
+          n.load    = model.rho (n.arrival_rate, n.depart_rate);
           
-          model_nodes[dpid] = n;
+          this.model_nodes[dpid] = n;
         }
-        return model_nodes;
-    }
-    var update_gui: function(data) {
+        return this.model_nodes;
+    },
+    update_gui: function (data) {
         elem.stats
             .selectAll(".dpid")
             .text(  function(d) {
-                return "dpid:    "+dpid_to_int(d.dpid);                         });
+                return "dpid:    "+dpid_to_int(d.dpid); });
         elem.stats
             .selectAll(".rx_packets")
             .text(  function(d) { 
-                return "Rx:      "+data[d.dpid].rx.toFixed(2);          });
+                return "Rx:      "+data[d.dpid].rx.toFixed(2); });
         elem.stats
             .selectAll(".lambda")
             .text(  function(d) { 
-                return lambda_char+":   "+data[d.dpid].arrival_rate.toFixed(2); });
+                return LAM+":    "+data[d.dpid].arrival_rate.toFixed(2); });
+        elem.stats
+            .selectAll(".mu")
+            .text(  function(d) { 
+                return MU+":     "+data[d.dpid].depart_rate.toFixed(2); });
         elem.stats
             .selectAll(".controllerTx")
             .text(  function(d) { 
-                return "to_ctrl: "+data[d.dpid].depart_rate.toFixed(2);         });
+                return "to_ctrl: "+data[d.dpid].controller.to; });
+        elem.stats
+            .selectAll(".controllerRx")
+            .text(  function(d) { 
+                return "frm_ctrl: "+data[d.dpid].controller.from; });
         elem.stats
             .selectAll(".sojourn")
             .text(  function(d) { 
-                return "from_ctrl:   "+data[i].sojourn.toFixed(2);         });
-    }
+                return "sojourn: "+data[d.dpid].sojourn.toFixed(2); });
+        elem.stats
+            .selectAll(".load")
+            .text(  function(d) { 
+                return "load:    "+data[d.dpid].load.toFixed(2); });
+        elem.stats
+            .selectAll(".bufflen")
+            .text(  function(d) { 
+                return "length:  "+data[d.dpid].buflen.toFixed(2); });
+    },
     event_update_statistics: function(new_stats) {
         console.log("Updating statistics");
         
         /* Apply the model */
-        model_data = this.process_data(topo.nodes, new_stats);
+        model_data = this.process_stats(topo.nodes, new_stats);
         
-        if (model_data === 0) 
+        if (model_data === NOT_READY) 
           return "";
         
         /* Update the displayed data */
-        update_gui(model_data);
+        this.update_gui(model_data);
         
         return "";
     },
