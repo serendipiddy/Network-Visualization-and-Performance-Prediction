@@ -204,24 +204,26 @@ elem.update = function () {
     statEnter.append("text").attr("class","dpid")
         .attr("x",30).attr("y",-20).text(function(d) {return "dpid:"+dpid_to_int(d.dpid);});
     statEnter.append("text").attr("class","rx_packets")
-        .attr("x",30).attr("y",-5).text("Rx:  (loading..)");
+        .attr("x",30).attr("y",-5).text("Rx:  (..)");
+    statEnter.append("text").attr("class","tx_packets")
+        .attr("x",80).attr("y",-5).text("Tx:  (..)");
         
     statEnter.append("text").attr("class","lambda")
-        .attr("x",30).attr("y",10).text(LAM+": (loading..)");
+        .attr("x",30).attr("y",10).text(LAM+": (..)");
     statEnter.append("text").attr("class","mu")
-        .attr("x",80).attr("y",10).text(MU+": (loading..)");
+        .attr("x",80).attr("y",10).text(MU+": (..)");
         
     statEnter.append("text").attr("class","controllerTx")
-        .attr("x",30).attr("y",25).text("to_ctrl: (loading..)");
+        .attr("x",30).attr("y",25).text("to_ctrl: (..)");
     statEnter.append("text").attr("class","controllerRx")
-        .attr("x",30).attr("y",40).text("frm_ctrl: (loading..)");
+        .attr("x",30).attr("y",40).text("frm_ctrl: (..)");
         
     statEnter.append("text").attr("class","sojourn")
-        .attr("x",30).attr("y",55).text("sojourn: (loading..)");
+        .attr("x",30).attr("y",55).text("sojourn: (..)");
     statEnter.append("text").attr("class","load")
-        .attr("x",30).attr("y",70).text("load: (loading..)");
+        .attr("x",30).attr("y",70).text("load: (..)");
     statEnter.append("text").attr("class","bufflen")
-        .attr("x",30).attr("y",85).text("length: (loading..)");
+        .attr("x",30).attr("y",85).text("length: (..)");
         
     /* Ports */
     var ports = topo.get_ports();
@@ -395,7 +397,9 @@ var model_ = {
         /* Create this.model_nodes */
         var mn_length = 0;
         for (s in stats) {
-          this.model_nodes[s] = {};
+          if (!this.model_nodes[s]) {
+            this.model_nodes[s] = {};
+          }
           mn_length++;
         }
         
@@ -416,20 +420,28 @@ var model_ = {
           if (data === "loading")
             return NOT_READY;
           
-          // TODO for now, simply aggregate the stats of each switch
+          /* TODO: for now, simply aggregate the stats of each switch */
           
+          // if (this.model_nodes[dpid].depart_rate) {
+            // n.depart_rate  = this.model_nodes[dpid].depart_rate;
+          // }
+          // else n.depart_rate  = 0;
           n.arrival_rate = 0;
           n.depart_rate  = 0;
           n.rx = 0;
           n.tx = 0;
           
-          /* Compute this in the model itself.. pass it the ports to deal with!        <<< LLINK */
+          /* Compute this in the model itself..? 
+            pass it the ports to deal with!        <<< LLINK 
+            **At the moment it's aggregating the ports for the switch** */
           console.log("  Processing ports: ");
           for (var p = 0; p < data.length; p++) {
             console.log("    port: "+data[p].port_no);
             n.port_no      += data[p].port_no;
             n.arrival_rate += data[p].arrival_rate;
+            // if (data[p].depart_rate > n.depart_rate) {
             n.depart_rate  += data[p].depart_rate;
+            // }
             n.rx           += data[p].rx_packets;
             n.tx           += data[p].tx_packets;
             
@@ -461,7 +473,11 @@ var model_ = {
         elem.stats
             .selectAll(".rx_packets")
             .text(  function(d) { 
-                return "Rx:      "+data[d.dpid].rx.toFixed(2); });
+                return "Rx:      "+data[d.dpid].rx; });
+        elem.stats
+            .selectAll(".tx_packets")
+            .text(  function(d) { 
+                return "Tx:      "+data[d.dpid].rx; });
         elem.stats
             .selectAll(".lambda")
             .text(  function(d) { 
