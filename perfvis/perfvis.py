@@ -118,6 +118,6 @@ class PerformanceServerApp(app_manager.RyuApp):
         self.currentstats[dp] = current_stats
 
 
-# app_manager.require_app('ryu.app.simple_switch_13') # Causes chaos to ensue
+app_manager.require_app('ryu.app.simple_switch_13') # Causes chaos to ensue
 app_manager.require_app('ryu.app.rest_topology')
 app_manager.require_app('ryu.app.ws_topology')

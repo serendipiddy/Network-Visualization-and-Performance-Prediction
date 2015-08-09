@@ -1,11 +1,10 @@
 from ryu.lib.dpid import dpid_to_str
 from operator import attrgetter
 
-# class process_stats():
+""" Functions for processing the performance visualizer app """
 
-
-""" Transforms an array of ports into a dictionary, referenced by port number """
 def invert(port_array, placeholder):
+    """ Transforms an array of ports into a dictionary, referenced by port number """
     if port_array == placeholder:
       return port_array 
     prev = {}
@@ -14,16 +13,16 @@ def invert(port_array, placeholder):
       
     return prev
     
-""" Reads the OpenFlow event, translating into a dictionary.
-    { datapath: dpid,
-      ports: [  { port_no
-                  rx_packets
-                  tx_packets
-                  rx_dropped
-                  tx_dropped
-                  duration_sec
-                  duration_nano  } ] } """
 def stats_event(ev, logging):
+    """ Reads the OpenFlow event, translating into a dictionary.
+        { datapath: dpid,
+          ports: [  { port_no
+                      rx_packets
+                      tx_packets
+                      rx_dropped
+                      tx_dropped
+                      duration_sec
+                      duration_nano  } ] } """
     body = ev.msg.body
     
     # make a dictionary
@@ -59,8 +58,8 @@ def stats_event(ev, logging):
     
     return data
     
-""" Calculates the current average rates for this switch """
 def avg_rates(current, previous, placeholder):
+    """ Calculates the current average rates for this switch """
     dp_stats = []
     
     previous = invert(previous, placeholder)
@@ -74,8 +73,8 @@ def avg_rates(current, previous, placeholder):
             duration = p['duration_sec']
             port_stats['arrival_rate'] = float(p['rx_packets'])/duration
             port_stats['depart_rate'] = float(p['tx_packets'])/duration
-            port_stats['tx_packets'] = p['tx_packets']
-            port_stats['rx_packets'] = p['rx_packets']
+            port_stats['tx_packets'] = p['tx_packets']/duration
+            port_stats['rx_packets'] = p['rx_packets']/duration
         
         else:
             prev_data = previous[port_no]
