@@ -428,8 +428,9 @@ var model_ = {
           // else n.depart_rate  = 0;
           n.arrival_rate = 0;
           n.depart_rate  = 0;
-          n.rx = 0;
-          n.tx = 0;
+          n.rx  = 0;
+          n.tx  = 0;
+          n.pnf = 0; // probability of using controller
           
           /* Compute this in the model itself..? 
             pass it the ports to deal with!        <<< LLINK 
@@ -464,6 +465,9 @@ var model_ = {
           this.model_nodes[dpid] = n;
         }
         return this.model_nodes;
+    },
+    change_input: function(dp, attr, val) {
+      this.mode_nodes[dp][attr] = val;
     },
     update_gui: function (data) {
         elem.stats

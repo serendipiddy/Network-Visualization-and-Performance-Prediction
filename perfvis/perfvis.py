@@ -106,7 +106,17 @@ class PerformanceServerApp(app_manager.RyuApp):
         req = ofp_parser.OFPPortStatsRequest(datapath, 0, ofp.OFPP_ANY)
         datapath.send_msg(req)
 
+    def send_flow_stats_request(self, datapath):
+        ofp = datapath.ofproto
+        ofp_parser = datapath.ofproto_parser
+        
+        cookie = cookie_mask = 0
+        match = ofp_parser.OFPMatch(in_port=1)
+        req = ofp_parser.OFPFlowStatsRequest(datapath, 0, ofp.OFPTT_ALL, 
+                ofp.OFPP_ANY, ofp.OFPG_ANY, cookie, cookie_mask, match)
+        datapath.send_msg(msg)
 
+        
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
         current_data = process.stats_event(ev, self.logging)
@@ -116,8 +126,20 @@ class PerformanceServerApp(app_manager.RyuApp):
         
         self.prevreadings[dp] = current_data['ports']
         self.currentstats[dp] = current_stats
+        
+    @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
+    def flow_stats_reply_handler(self, ev):
+        flows = []
+        for stat in ev.msg.body:
+            flows.append('table_id=%s '
+                'duration_sec=%d duration_nsec=%d priority=%d idle_timeout=%d hard_timeout=%d flags=0x%04x '
+                'cookie=%d packet_count=%d byte_count=%d match=%s instructions=%s' %
+                    (stat.table_id, stat.duration_sec, stat.duration_nsec,
+                    stat.priority, stat.idle_timeout, stat.hard_timeout, stat.flags,
+                    stat.cookie, stat.packet_count, stat.byte_count, stat.match, stat.instructions))
+        self.logger.debug('FlowStats: %s', flows)
 
 
-app_manager.require_app('ryu.app.simple_switch_13') # Causes chaos to ensue
+# app_manager.require_app('ryu.app.simple_switch_13') # Causes chaos to ensue
 app_manager.require_app('ryu.app.rest_topology')
 app_manager.require_app('ryu.app.ws_topology')
