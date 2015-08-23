@@ -1,6 +1,6 @@
 from ryu.lib.dpid import dpid_to_str
 from operator import attrgetter
-import json
+import hashlib
 
 """ Functions for processing the performance visualizer app """
 
@@ -10,14 +10,15 @@ def invert(flow_array, placeholder):
       return flow_array 
     prev = {}
     for p in flow_array:
-      prev[p['match']] = p
+      prev[p['flow_id']] = p
       
     return prev
     
 def stats_event(ev, logging):
     """ Reads the OpenFlow event, translating into a dictionary.
         { datapath: dpid,
-          flows: [  { table_id
+          flows: [  { flow_id
+                      table_id
                       packet_count
                       duration_sec
                       duration_nano
@@ -27,7 +28,7 @@ def stats_event(ev, logging):
     # make a dictionary
     data = {
         'datapath': dpid_to_str(ev.msg.datapath.id),
-        'flows': dict()
+        'flows': []
     }
     
     # draw header row
@@ -37,15 +38,18 @@ def stats_event(ev, logging):
     
     # add each port's statistic
     for stat in body:
+        hash = hashlib.md5()
+        hash.update("%d %s" % (stat.table_id, stat.match))
         flow = {
-            'table_id': stat.table_id,
-            'packet_count': stat.packet_count, 
-            'duration_sec': stat.duration_sec,
-            'duration_nano': stat.duration_nsec,
-            'match': stat.match
+            'flow_id':        hash.hexdigest(),
+            'table_id':       stat.table_id,
+            'packet_count':   stat.packet_count, 
+            'duration_sec':   stat.duration_sec,
+            'duration_nano':  stat.duration_nsec,
+            'match':          stat.match
           }
         # data['flows'].append(flow)
-        data['flows'][str(stat.match)[9:-1]] = flow
+        data['flows'].append(flow)
         
         if (logging):
             print('%8s %8d %8d %9d %8s' %
@@ -59,32 +63,34 @@ def avg_rates(current, previous, placeholder):
     
     previous = invert(previous, placeholder)
     
-    # some check in case match is not in previous
+    # # # # # # # # # # # # # # # # # # # # # # # # #
+    #                                               #
+    #  some check in case match is not in previous  #
+    #       (and previous is not is current)        #
+    #                                               #
+    # # # # # # # # # # # # # # # # # # # # # # # # #
+    
+    # division by zero can occur otw /duration
     
     for p in current['flows']: # for each flow in dp
-        # flow_match = p['match']
-        # print(json.dumps(str(flow_match)[9:-1]))
-        flow_match = p['match'][9:-1]
-        flow_stats = {'match':flow_match}
+        flow_id = p['flow_id']
+        flow_stats = {'flow_id':flow_id}
         
-        # { datapath: dpid,
-          # flows: [  { table_id
-                      # packet_count
-                      # duration_sec
-                      # duration_nano
-                      # match          } ] }
-        
-        # find the difference between current and old stats
+        # find the difference between current and packet counts, calculate the averages
         if (previous == placeholder):
             duration = p['duration_sec']
-            flow_stats['arrival_rate'] = float(p['packet_count'])/duration
-        
+            if (duration <= 0):
+              flow_stats['arrival_rate'] = 0
+            else:
+              flow_stats['arrival_rate'] = float(p['packet_count'])/duration
+            flow_stats['packet_count'] = p['packet_count']
         else:
-            prev_data = previous[flow_match]
+            prev_data = previous[flow_id]
             duration = p['duration_sec'] - prev_data['duration_sec']
             flow_stats['arrival_rate'] = float(p['packet_count'] - prev_data['packet_count'])/duration
+            flow_stats['packet_count'] = p['packet_count'] - prev_data['packet_count']
 
-        flow_stats['service_rate'] = 56625 ## TODO
+        # flow_stats['service_rate'] = 56625 ## TODO
         flow_stats['total_packets'] = p['packet_count']
         
         dp_stats.append(flow_stats)
