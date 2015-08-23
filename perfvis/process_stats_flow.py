@@ -76,8 +76,10 @@ def avg_rates(current, previous, placeholder):
         flow_id = p['flow_id']
         flow_stats = {'flow_id':flow_id}
         
+        ## TODO: detect previous results on a per-flow basis.
+        
         # find the difference between current and packet counts, calculate the averages
-        if (previous == placeholder):
+        if (previous == placeholder or flow_id not in previous):
             duration = p['duration_sec']
             if (duration <= 0):
               flow_stats['arrival_rate'] = 0
