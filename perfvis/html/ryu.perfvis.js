@@ -181,6 +181,7 @@ elem.update = function () {
     // statEnter.append("text").attr("class","controllerRx")
         // .attr("x",30).attr("y",40).text("frm_ctrl: (..)");
         
+        
     statEnter.append("text").attr("class","sojourn")
         .attr("x",30).attr("y",25).text("sojourn: (..)");
     statEnter.append("text").attr("class","load")
