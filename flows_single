@@ -1,0 +1,2 @@
+in_port=1 action=output:2
+in_port=2 action=output:1

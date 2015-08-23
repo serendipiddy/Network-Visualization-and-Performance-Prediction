@@ -10,7 +10,9 @@ from ryu.controller import ofp_event
 from socket import error as SocketError
 from tinyrpc.exc import InvalidReplyError
 
-import process_stats as process
+import process_stats_port as process
+import process_stats_flow as processf
+import process_stats_flow_agg as processfg
 from performance_server import PerformanceServerController
 
 
@@ -36,9 +38,10 @@ class PerformanceServerApp(app_manager.RyuApp):
         # These are assigned in _port_stats_reply_handler()
         self.prevreadings = {}           # previous network readings
         self.currentstats = {}           # current network statistics
-        self.logging = False
-        self.waittime = 10
+        self.logging = True
+        self.waittime = 5
         self.placeholder = 'loading'
+        self.statstype = 'flow'          # 'port' or 'flow' or 'flow-agg', depending on the desired statistics
 
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -61,14 +64,19 @@ class PerformanceServerApp(app_manager.RyuApp):
                 del self.currentstats[datapath.id]
 
 
+    """Requests statistics for each switch stored
+        Instated by self.monitor_thread"""
     def monitor(self):
-        """Requests statistics for each switch stored
-            Instated by self.monitor_thread"""
         self.logger.info("Starting stats monitor")
         while True:
             count = 0
             for dp in self.datapaths.values():
-                self.send_port_stats_request(dp)
+                if (self.statstype == 'flow'):
+                  self.send_flow_stats_request(dp)
+                elif (self.statstype == 'flow-agg'):
+                  self.send_flow_agg_stats_request(dp)
+                elif (self.statstype == 'port'):
+                  self.send_port_stats_request(dp)
                 count += 1
             if self.datapaths.values():
                 self.req_count += 1
@@ -99,23 +107,12 @@ class PerformanceServerApp(app_manager.RyuApp):
             self.rpc_clients.remove(client)
 
 
+    """Sends a port statistics request for all ports on datapath"""
     def send_port_stats_request(self, datapath):
-        """Sends a port statistics request for all ports on datapath"""
         ofp = datapath.ofproto
         ofp_parser = datapath.ofproto_parser
         req = ofp_parser.OFPPortStatsRequest(datapath, 0, ofp.OFPP_ANY)
         datapath.send_msg(req)
-
-    def send_flow_stats_request(self, datapath):
-        ofp = datapath.ofproto
-        ofp_parser = datapath.ofproto_parser
-        
-        cookie = cookie_mask = 0
-        match = ofp_parser.OFPMatch(in_port=1)
-        req = ofp_parser.OFPFlowStatsRequest(datapath, 0, ofp.OFPTT_ALL, 
-                ofp.OFPP_ANY, ofp.OFPG_ANY, cookie, cookie_mask, match)
-        datapath.send_msg(msg)
-
         
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
@@ -127,17 +124,45 @@ class PerformanceServerApp(app_manager.RyuApp):
         self.prevreadings[dp] = current_data['ports']
         self.currentstats[dp] = current_stats
         
+    """ Sends a statistics request for flows """
+    def send_flow_stats_request(self, datapath):
+        ofp = datapath.ofproto
+        ofp_parser = datapath.ofproto_parser
+        
+        cookie = cookie_mask = 0
+        match = ofp_parser.OFPMatch()
+        req = ofp_parser.OFPFlowStatsRequest(datapath, 0, ofp.OFPTT_ALL, # any table, port, group
+                ofp.OFPP_ANY, ofp.OFPG_ANY, cookie, cookie_mask, match)
+        datapath.send_msg(req)
+        
+        
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def flow_stats_reply_handler(self, ev):
-        flows = []
-        for stat in ev.msg.body:
-            flows.append('table_id=%s '
-                'duration_sec=%d duration_nsec=%d priority=%d idle_timeout=%d hard_timeout=%d flags=0x%04x '
-                'cookie=%d packet_count=%d byte_count=%d match=%s instructions=%s' %
-                    (stat.table_id, stat.duration_sec, stat.duration_nsec,
-                    stat.priority, stat.idle_timeout, stat.hard_timeout, stat.flags,
-                    stat.cookie, stat.packet_count, stat.byte_count, stat.match, stat.instructions))
-        self.logger.debug('FlowStats: %s', flows)
+        current_flows = processf.stats_event(ev, self.logging)
+        dp = current_flows['datapath']
+        
+        current_stats = processf.avg_rates(current_flows, self.prevreadings[dp], self.placeholder)
+        
+        self.prevreadings[dp] = current_flows['flows']
+        self.currentstats[dp] = current_stats
+        
+
+    """ Sends a statistics request for aggregate flows """
+    def send_flow_agg_stats_request(self, datapath):
+        ofp = datapath.ofproto
+        ofp_parser = datapath.ofproto_parser
+        
+        cookie = cookie_mask = 0
+        match = ofp_parser.OFPMatch(in_port=1)
+        req = ofp_parser.OFPAggregateStatsRequest(datapath, 0, ofp.OFPTT_ALL, # any table port, group
+                ofp.OFPP_ANY, ofp.OFPG_ANY, cookie, cookie_mask, match)
+        datapath.send_msg(req)
+        
+        
+    @set_ev_cls(ofp_event.EventOFPAggregateStatsReply, MAIN_DISPATCHER)
+    def flow_stats_agg_reply_handler(self, ev):
+        current_flows = processfg.stats_event(ev, self.logging)
+        self.logger.debug('FlowStats: %s', ev)
 
 
 # app_manager.require_app('ryu.app.simple_switch_13') # Causes chaos to ensue

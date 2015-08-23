@@ -427,7 +427,7 @@ var model_ = {
           // }
           // else n.depart_rate  = 0;
           n.arrival_rate = 0;
-          n.depart_rate  = 0;
+          n.depart_rate  = 56625; // 17.66us
           n.rx  = 0;
           n.tx  = 0;
           n.pnf = 0; // probability of using controller
@@ -441,8 +441,7 @@ var model_ = {
             n.port_no      += data[p].port_no;
             n.arrival_rate += data[p].arrival_rate;
             // if (data[p].depart_rate > n.depart_rate) {
-            n.depart_rate  += data[p].depart_rate;
-            // }
+            n.depart_rate  += data[p].depart_rate;       // }
             n.rx           += data[p].rx_packets;
             n.tx           += data[p].tx_packets;
             
