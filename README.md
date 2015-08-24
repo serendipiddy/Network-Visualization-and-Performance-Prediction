@@ -1,4 +1,4 @@
-# openflow-performance-visualizer
+# OpenFlow Performance Visualizer
 Visualizes the performance of an OpenFlow network using queueing theory
 
 This project is the work-in-progress of an undergraduate final year project. 
