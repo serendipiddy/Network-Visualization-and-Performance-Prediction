@@ -145,24 +145,6 @@ class PerformanceServerApp(app_manager.RyuApp):
         self.currentstats[dp] = current_stats
         
 
-    """ Sends a statistics request for aggregate flows """
-    def send_flow_agg_stats_request(self, datapath):
-        ofp = datapath.ofproto
-        ofp_parser = datapath.ofproto_parser
-        
-        cookie = cookie_mask = 0
-        match = ofp_parser.OFPMatch(in_port=1)
-        req = ofp_parser.OFPAggregateStatsRequest(datapath, 0, ofp.OFPTT_ALL, # any table port, group
-                ofp.OFPP_ANY, ofp.OFPG_ANY, cookie, cookie_mask, match)
-        datapath.send_msg(req)
-        
-        
-    @set_ev_cls(ofp_event.EventOFPAggregateStatsReply, MAIN_DISPATCHER)
-    def flow_stats_agg_reply_handler(self, ev):
-        current_flows = processfg.stats_event(ev, self.logging)
-        self.logger.debug('FlowStats: %s', ev)
-
-
 # app_manager.require_app('ryu.app.simple_switch_13') # Causes chaos to ensue
 app_manager.require_app('ryu.app.rest_topology')
 app_manager.require_app('ryu.app.ws_topology')
