@@ -41,7 +41,7 @@ class PerformanceServerApp(app_manager.RyuApp):
         self.logging = True
         self.waittime = 5
         self.placeholder = 'loading'
-        self.statstype = 'flow'          # 'port' or 'flow' or 'flow-agg', depending on the desired statistics
+        self.statstype = 'flow'          # 'port' or 'flow', depending on the desired statistics
 
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -73,8 +73,6 @@ class PerformanceServerApp(app_manager.RyuApp):
             for dp in self.datapaths.values():
                 if (self.statstype == 'flow'):
                   self.send_flow_stats_request(dp)
-                elif (self.statstype == 'flow-agg'):
-                  self.send_flow_agg_stats_request(dp)
                 elif (self.statstype == 'port'):
                   self.send_port_stats_request(dp)
                 count += 1
