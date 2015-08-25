@@ -44,7 +44,7 @@ class PerformanceServerApp(app_manager.RyuApp):
         self.logging = True
         self.waittime = 5
         self.placeholder = 'loading'
-        self.statstype = 'flow'          # 'port' or 'flow', depending on the desired statistics
+        self.statstype = 'port'          # 'port' or 'flow', depending on the desired statistics
 
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -57,9 +57,8 @@ class PerformanceServerApp(app_manager.RyuApp):
             if not datapath.id in self.datapaths:
                 self.logger.debug('register datapath: %016x', datapath.id)
                 self.datapaths[datapath.id] = datapath
-                # self.currentstats[dpid_to_str(datapath.id)] = self.placeholder 
                 self.prevreadings[dpid_to_str(datapath.id)] = self.placeholder
-                
+                # self.currentstats[dpid_to_str(datapath.id)] = self.placeholder 
         elif ev.state == DEAD_DISPATCHER: # Removed switches
             if datapath.id in self.datapaths:
                 self.logger.debug('unregister datapath: %016x', datapath.id)

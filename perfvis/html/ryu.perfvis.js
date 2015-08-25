@@ -13,16 +13,27 @@ var CONF = {
 
 var sample = {
   "0000000000000001": [
-    {"flow_id": "e6c8d3da6b2315b0bc929bc63ce929aa", "packet_count": 0, "arrival_rate": 100.0, "total_packets": 100},
-    {"flow_id": "bc929bc63ce929aae6c8d3da6b2315b0","packet_count": 0, "arrival_rate": 100.0, "total_packets": 100},
+    {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
+    {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
   ],
   "0000000000000002": [
-    {"flow_id": "e6c8d3da6b2315b0bc929bc63ce929aa", "packet_count": 0, "arrival_rate": 100.0, "total_packets": 100},
-    {"flow_id": "bc929bc63ce929aae6c8d3da6b2315b0","packet_count": 0, "arrival_rate": 100.0, "total_packets": 100},
+    {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
+    {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
   ]
 };
 var sample_switches = [{"ports": [{"hw_addr": "62:97:f2:85:7b:af", "name": "s1-eth1", "port_no": "00000001", "dpid": "0000000000000001"}, {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}], "dpid": "0000000000000001"}, {"ports": [{"hw_addr": "82:bd:da:72:ca:bb", "name": "s2-eth1", "port_no": "00000001", "dpid": "0000000000000002"}, {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}], "dpid": "0000000000000002"}];
 var sample_links = [{"src": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}, "dst": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}}, {"src": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}, "dst": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}}];
+var OFPorts = {
+    0xffffff00: 'OFPP_MAX',
+    0xfffffff8: 'OFPP_IN_PORT',
+    0xfffffff9: 'OFPP_TABLE',
+    0xfffffffa: 'OFPP_NORMAL',
+    0xfffffffb: 'OFPP_FLOOD',
+    0xfffffffc: 'OFPP_ALL',
+    0xfffffffd: 'OFPP_CONTROLLER',
+    0xfffffffe: 'OFPP_LOCAL',
+    0xffffffff: 'OFPP_ANY'
+}
 
 var ws = new WebSocket("ws://" + location.host + "/v1.0/topology/ws");
 ws.onmessage = function(event) {
@@ -38,7 +49,6 @@ ws.onmessage = function(event) {
 var glob = "";
 var LAM = String.fromCharCode(parseInt("03BB",16));
 var MU = String.fromCharCode(parseInt("03BC",16));
-var CTRL_PORT = 4294967294;
 var NOT_READY = -1;
 
 /* For receiving performance information */
@@ -166,35 +176,30 @@ elem.update = function () {
     /* Statistics */
     this.stats = this.stats.data(topo.nodes);
     this.stats.exit().remove(); // makes stats disappear with the topology
-      // .data(process_data(topo.nodes,"undefined"));
     var statEnter = this.stats.enter().append("g")
         .attr("class","stats"); // this is where the interactivity will be added
         
     statEnter.append("text").attr("class","dpid")
         .attr("x",30).attr("y",-20).text(function(d) {return "dpid:"+dpid_to_int(d.dpid);});
         
+    var default_val = ".";
+        
     statEnter.append("text").attr("class","lambda")
-        .attr("x",30).attr("y",-5).text(LAM+": (..)");
+        .attr("x",30).attr("y",-5).text(LAM+": "+default_val);
     statEnter.append("text").attr("class","mu")
-        .attr("x",90).attr("y",-5).text(MU+": (..)");
+        .attr("x",90).attr("y",-5).text(MU+": "+default_val);
         
     statEnter.append("text").attr("class","rx")
-        .attr("x",30).attr("y",10).text("Rx:  (..)");
+        .attr("x",30).attr("y",10).text("Rx:  "+default_val);
     statEnter.append("text").attr("class","total")
-        .attr("x",90).attr("y",10).text("Total:  (..)");
-        
-    // statEnter.append("text").attr("class","controllerTx")
-        // .attr("x",30).attr("y",25).text("to_ctrl: (..)");
-    // statEnter.append("text").attr("class","controllerRx")
-        // .attr("x",30).attr("y",40).text("frm_ctrl: (..)");
-        
+        .attr("x",90).attr("y",10).text("Total:  "+default_val);
         
     statEnter.append("text").attr("class","sojourn")
-        .attr("x",30).attr("y",25).text("sojourn: (..)");
+        .attr("x",30).attr("y",25).text("sojourn: "+default_val);
     statEnter.append("text").attr("class","load")
-        .attr("x",30).attr("y",40).text("load: (..)");
+        .attr("x",30).attr("y",40).text("load: "+default_val);
     statEnter.append("text").attr("class","bufflen")
-        .attr("x",30).attr("y",55).text("length: (..)");
+        .attr("x",30).attr("y",55).text("length: "+default_val);
         
     /* Ports */
     var ports = topo.get_ports();
@@ -376,64 +381,66 @@ var stats = {
                 'model':            config.model_default, // type of model used for this node
                 'pnf':              0,                    // probability of using controller
                 'queue_capacity':   NOT_READY,            // capacity of the queue (buffer size)
-                
-                /* input and blank output of the model */
-                'input':  {  // TODO: will be a list of flows, atm is an aggregate of all flows
+              };
+            } 
+            /* TODO: check this new way preserves the mode,switch and pnf etc if they're changed in Editmode */
+            this.stats_nodes[dpid]
+                .input =  {
                     'arrival_rate':     0,
+                    'depart_rate':      0,
                     'service_rate':     config.switch_configs[config.switch_default].service_rate,  
                     'service_variance': config.switch_configs[config.switch_default].service_variance, 
-                    'rx':               0,          // packets received over duration
-                    'tot_rx':           0,          // total packets received in this flow
-                },  
-                'output': {},
-              };
-            }
+                    'rx_packets':       0,          // packets received over duration
+                    'tx_packets':       0,          // packets sent over duration
+                    'total_rx':         0,          // total packets received on this port
+                    'total_tx':         0,          // total packets sent on this port
+                };
+            this.stats_nodes[dpid].output = {};
             sn_length++;
         }
         
         if (nodes.length != sn_length) {
-          console.log("error, node and stat lengths differ");
-          return NOT_READY;
+            console.log("error, node and stat lengths differ");
+            return NOT_READY;
         }
         
-        /* 
-         * TODO: add another node for the controller
-         */
+        /* TODO: add another node for the controller */
         
         /* Populate the node structure with the flow info */
         for (var i = 0; i < nodes.length; i++) { 
-          var dpid = nodes[i].dpid;
-          
-          // data = {"flow_id":,"packet_count":,"arrival_rate":,"total_packets":},
-          data = stats[dpid]; 
-          
-          console.log("Processing node "+dpid);
-          if (data === "loading")
-            return NOT_READY;
-          
-          /* Compute this in the model itself..? 
-           * **At the moment it's aggregating the flows for the switch** 
-           */
-          console.log("  Processing flows: ");
-          for (var f = 0; f < data.length; f++) {
-            this.stats_nodes[dpid].input.arrival_rate = 0;
-            this.stats_nodes[dpid].input.rx           = 0;
-            this.stats_nodes[dpid].input.tot_rx       = 0;
-          }
-          
-          for (var f = 0; f < data.length; f++) {
-            console.log("    flow: "+data[f].flow_id);
-            this.stats_nodes[dpid].input.arrival_rate += data[f].arrival_rate;
-            this.stats_nodes[dpid].input.rx           += data[f].packet_count;
-            this.stats_nodes[dpid].input.tot_rx       += data[f].total_packets;
-          }
+            var dpid = nodes[i].dpid;
+            data = stats[dpid]; 
+            console.log("Processing node "+dpid);
+            
+            if (data === "loading")
+              return NOT_READY;
+            
+            console.log("  Processing ports: ");
+            this.stats_nodes[dpid].input.ports = {};
+            for (var f = 0; f < data.length; f++) {
+                console.log("    port: "+port_no);
+                var port = data[f];
+                var port_no = data[f].port_no;
+                
+                if (!(port_no in OFPorts)) {
+                  this.stats_nodes[dpid].input.depart_rate  += port['arrival_rate'];
+                  this.stats_nodes[dpid].input.arrival_rate += port['depart_rate'];
+                  this.stats_nodes[dpid].input.rx_packets   += port['rx_packets'];
+                  this.stats_nodes[dpid].input.tx_packets   += port['tx_packets'];
+                  this.stats_nodes[dpid].input.total_rx     += port['total_rx'];
+                  this.stats_nodes[dpid].input.total_tx     += port['total_tx'];
+                } else console.log(port_no+" is not a port");
+                
+                this.stats_nodes[dpid].input.ports[port_no] = port;
+            }
         }
-        return this.stats_nodes;
+        // return this.stats_nodes;
     },
     event_update_statistics: function(new_stats) {
         console.log("Updating statistics");
         
         /* Update stats */
+        // console.log(JSON.stringify(this.process_stats(topo.nodes, new_stats),null,2));
         this.process_stats(topo.nodes, new_stats);
         
         if (this.stats_nodes === NOT_READY) 
@@ -512,7 +519,7 @@ var editmode = {
         else console.log('switch config \''+new_name+'\' not found');
     },
     change_input_by: function(dpid, attr, value) { /* Add this to the live readings */
-        if (!dpid in this.datapaths) {
+        if (!(dpid in this.datapaths)) {
           console.log("unknown dpid: "+dpid);
           return;
         }
@@ -529,7 +536,7 @@ var editmode = {
         // this.edit_switch_input(dp, attr, value + this.data[dp].input[attr]); 
     },
     set_input: function(dpid, attr, value) { /* Set an attribute to remain during updates */
-        if (!dpid in this.datapaths) {
+        if (!(dpid in this.datapaths)) {
           console.log("unknown dpid: "+dpid);
           return;
         }
@@ -543,7 +550,7 @@ var editmode = {
         this.persistentchange[dpid] = currentchanges;
     },
     edit_switch_input: function(dpid, attr, value) { /* Replaces the live readings, during edit mode */
-        if (!this.data[dpid]) {
+        if (!(this.data[dpid])) {
           console.log('unknown dpid: '+dpid);
           return;
         }
@@ -598,13 +605,12 @@ var editmode = {
     },
     update_gui: function (data) { /* Updates the displayed performance values */
         console.log('Updating GUI')
-        // console.log(data)
         elem.stats.selectAll(".dpid").text(  function(d) {
                 return "dpid:    "+dpid_to_int(d.dpid); });
         elem.stats.selectAll(".rx").text(  function(d) { 
-                return "Rx:      "+data[d.dpid].input.rx; });
+                return "Rx:      "+data[d.dpid].input.rx_packets; });
         elem.stats.selectAll(".total").text(  function(d) { 
-                return "Total:   "+data[d.dpid].input.tot_rx; });
+                return "Total:   "+data[d.dpid].input.total_rx; });
         elem.stats.selectAll(".lambda").text(  function(d) { 
                 return LAM+":    "+data[d.dpid].input.arrival_rate.toFixed(2); });
         elem.stats.selectAll(".mu").text(  function(d) { 

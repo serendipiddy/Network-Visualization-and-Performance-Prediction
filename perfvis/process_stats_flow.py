@@ -92,7 +92,6 @@ def avg_rates(current, previous, placeholder):
             flow_stats['arrival_rate'] = float(p['packet_count'] - prev_data['packet_count'])/duration
             flow_stats['packet_count'] = p['packet_count'] - prev_data['packet_count']
 
-        # flow_stats['service_rate'] = 56625 ## TODO
         flow_stats['total_packets'] = p['packet_count']
         
         dp_stats.append(flow_stats)
