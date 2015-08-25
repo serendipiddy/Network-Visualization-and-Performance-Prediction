@@ -57,14 +57,14 @@ class PerformanceServerApp(app_manager.RyuApp):
             if not datapath.id in self.datapaths:
                 self.logger.debug('register datapath: %016x', datapath.id)
                 self.datapaths[datapath.id] = datapath
-                self.currentstats[dpid_to_str(datapath.id)] = self.placeholder 
+                # self.currentstats[dpid_to_str(datapath.id)] = self.placeholder 
                 self.prevreadings[dpid_to_str(datapath.id)] = self.placeholder
                 
         elif ev.state == DEAD_DISPATCHER: # Removed switches
             if datapath.id in self.datapaths:
                 self.logger.debug('unregister datapath: %016x', datapath.id)
                 del self.datapaths[datapath.id]
-                del self.currentstats[datapath.id]
+                # del self.currentstats[datapath.id]
 
 
     """Requests statistics for each switch stored

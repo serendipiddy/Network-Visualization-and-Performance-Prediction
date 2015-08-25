@@ -1,5 +1,7 @@
 from ryu.lib.dpid import dpid_to_str
 from operator import attrgetter
+from ryu.ofproto import ofproto_v1_3
+from ryu.ofproto.ofproto_v1_3_parser import OFPInstructionActions
 import hashlib
 
 """ Functions for processing the performance visualizer app """
@@ -36,7 +38,7 @@ def stats_event(ev, logging):
       print('Datapath %016x:\n%8s %8s %8s %8s %8s' 
                   % (ev.msg.datapath.id,'table_id','packets','sec','nano','match'))
     
-    # add each port's statistic
+    # add each flow's statistic
     for stat in body:
         hash = hashlib.md5()
         hash.update("%d %s" % (stat.table_id, stat.match))
@@ -46,8 +48,10 @@ def stats_event(ev, logging):
             'packet_count':   stat.packet_count, 
             'duration_sec':   stat.duration_sec,
             'duration_nano':  stat.duration_nsec,
-            'match':          stat.match
+            'match':          stat.match,
+            'action':         stat.instructions
           }
+        # parse_instructions(stat.instructions)
         # data['flows'].append(flow)
         data['flows'].append(flow)
         
@@ -63,12 +67,8 @@ def avg_rates(current, previous, placeholder):
     
     previous = invert(previous, placeholder)
     
-    # # # # # # # # # # # # # # # # # # # # # # # # #
-    #                                               #
-    #  some check in case match is not in previous  #
-    #       (and previous is not is current)        #
-    #                                               #
-    # # # # # # # # # # # # # # # # # # # # # # # # #
+    # checked if not in previous below
+    #   if not in current it would simply disappear..
     
     # division by zero can occur otw /duration
     
@@ -98,3 +98,26 @@ def avg_rates(current, previous, placeholder):
         dp_stats.append(flow_stats)
     
     return dp_stats
+    
+def parse_instructions(instrs):
+    destination = -1
+    print(instrs)
+    for a in instrs:
+      print(a)
+      OFPInstructionActions
+      # print(a['OFPActionOutput'])
+      print(p)
+      
+    
+    return destination
+    
+    # enum ofp_port_no
+    # ofproto_v1_3.OFPP_MAX = 0xffffff00
+    # ofproto_v1_3.OFPP_IN_PORT = 0xfffffff8       # Send the packet out the input port. (only way to go back
+    # ofproto_v1_3.OFPP_TABLE = 0xfffffff9         # Perform actions in flow table. NB: This can only be the destination port for packet-out messages.
+    # ofproto_v1_3.OFPP_NORMAL = 0xfffffffa        # Process with normal L2/L3 switching.
+    # ofproto_v1_3.OFPP_FLOOD = 0xfffffffb         # All physical ports except input port and those disabled by STP.
+    # ofproto_v1_3.OFPP_ALL = 0xfffffffc           # All physical ports except input port.
+    # ofproto_v1_3.OFPP_CONTROLLER = 0xfffffffd    # Send to controller.
+    # ofproto_v1_3.OFPP_LOCAL = 0xfffffffe         # Local openflow "port".
+    # ofproto_v1_3.OFPP_ANY = 0xffffffff           # Not associated with a physical port.

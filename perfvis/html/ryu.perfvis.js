@@ -164,8 +164,8 @@ elem.update = function () {
         .text(function(d) { return "dpid: " + trim_zero(d.dpid); });
 
     /* Statistics */
-    this.stats = this.stats
-      .data(topo.nodes);
+    this.stats = this.stats.data(topo.nodes);
+    this.stats.exit().remove(); // makes stats disappear with the topology
       // .data(process_data(topo.nodes,"undefined"));
     var statEnter = this.stats.enter().append("g")
         .attr("class","stats"); // this is where the interactivity will be added
@@ -449,18 +449,23 @@ var editmode = {
     datapaths: [],
     saved_data: {}, // 'key' -> data
     editmode: false,
-    inputchange: {},
-    persistentchange: {},
-    start_edit: function () {
+    inputchange: {}, /* Changes that sit on top of the live data */
+    persistentchange: {}, /* CHanges that replace the live data */
+    start_edit: function () { /* Stops live readings */
       console.log('entering edit mode');
       this.editmode = true;
+      this.graph = {
+          nodes: topo.nodes,
+          links: topo.links,
+          node_index: topo.node_index,
+      }
     },
-    end_edit: function () {
+    end_edit: function () { /* Resumes live readings */
       console.log('leaving edit mode');
       /* this.data = stats.stats_nodes // should I? */
       this.editmode = false;
     },
-    update_data: function (data) {
+    update_data: function (data) { /* Replace this.data with live readings */
         if (!this.editmode) {
           /* Apply the model */
           this.data = JSON.parse(JSON.stringify(data));
@@ -485,7 +490,7 @@ var editmode = {
           this.update_gui(this.data);
         }
     },
-    change_switch_model: function(dpid, new_model) {
+    change_switch_model: function(dpid, new_model) { /* Change the model used by given switch */
         if (config.queueing_models[new_model]) {
             this.data[dpid]['model'] = new_model;
             console.log('changed '+dpid+' to use \''+new_model+'\' model');
@@ -493,7 +498,7 @@ var editmode = {
         }
         else console.log('queueing model \''+new_model+'\' not found');
     },
-    change_switch_name: function(dpid, new_name) {
+    change_switch_name: function(dpid, new_name) { /* Change the switch hardware used by given switch */
         if (config.switch_configs[new_name]) {
             new_config = config.switch_configs[new_name];
             this.data[dpid]['switch_name']      = new_name;
@@ -523,7 +528,7 @@ var editmode = {
         /* this makes change instant, but allows incorrect cumulative increases */
         // this.edit_switch_input(dp, attr, value + this.data[dp].input[attr]); 
     },
-    set_input: function(dpid, attr, value) {
+    set_input: function(dpid, attr, value) { /* Set an attribute to remain during updates */
         if (!dpid in this.datapaths) {
           console.log("unknown dpid: "+dpid);
           return;
@@ -537,7 +542,7 @@ var editmode = {
         currentchanges[attr] = value;
         this.persistentchange[dpid] = currentchanges;
     },
-    edit_switch_input: function(dpid, attr, value) { /* Replaces the live readings */
+    edit_switch_input: function(dpid, attr, value) { /* Replaces the live readings, during edit mode */
         if (!this.data[dpid]) {
           console.log('unknown dpid: '+dpid);
           return;
@@ -554,7 +559,7 @@ var editmode = {
         }
         console.log('changed '+dpid+'\'s '+attr+' to '+value);
     },
-    run_model: function(dpid) {
+    run_model: function(dpid) { /* Applies to switches, getting their performance information */
         /* 
           get model from this.data[dpid].qstrategy
           model = this.data[dpid].qstrategy;
@@ -584,14 +589,14 @@ var editmode = {
         this.data[dpid].output.buflen  = out.length;
         this.data[dpid].output.sojourn = out.sojourn;
     },
-    add_switch: function(to_clone) {
+    add_switch: function(to_clone) { /* Artificially adds a switch to the network */
         /* 
             need some dpid allocation system
             deep copy of the given node (or define some blank one?)
             then need to edit the topology
         */
     },
-    update_gui: function (data) {
+    update_gui: function (data) { /* Updates the displayed performance values */
         console.log('Updating GUI')
         // console.log(data)
         elem.stats.selectAll(".dpid").text(  function(d) {
@@ -640,9 +645,13 @@ var test_edit_part2 = function() {
   editmode.update_gui(editmode.data);
 }
 
+var display_graph = {
+  
+}
+
 function main() {
-    // initialize_topology();
-    init_local();
+    initialize_topology();
+    // init_local();
 }
 
 main();
