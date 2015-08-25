@@ -40,7 +40,6 @@ var LAM = String.fromCharCode(parseInt("03BB",16));
 var MU = String.fromCharCode(parseInt("03BC",16));
 var CTRL_PORT = 4294967294;
 var NOT_READY = -1;
-var INFINITE_BUFFER = -1;
 
 /* For receiving performance information */
 // current_stats = "";
@@ -372,19 +371,19 @@ var stats = {
         for (dpid in stats) { // 'in' uses the keys from stats => the dpid
             if (!this.stats_nodes[dpid]) {
               this.stats_nodes[dpid] = {
-                    'dpid':             dpid,
-                    'switch_name':      config.switch_default, /* 'pica8' 'openWRT' 'facebook' etc */ // determined from controller?
-                    'model':            config.model_default, // type of model used for this node
+                'dpid':             dpid,
+                'switch_name':      config.switch_default, /* 'pica8' 'openWRT' 'facebook' etc */ // determined from controller?
+                'model':            config.model_default, // type of model used for this node
+                'pnf':              0,                    // probability of using controller
+                'queue_capacity':   NOT_READY,            // capacity of the queue (buffer size)
                 
                 /* input and blank output of the model */
                 'input':  {  // TODO: will be a list of flows, atm is an aggregate of all flows
                     'arrival_rate':     0,
                     'service_rate':     config.switch_configs[config.switch_default].service_rate,  
                     'service_variance': config.switch_configs[config.switch_default].service_variance, 
-                    'rx':               0,      // packets received over duration
-                    'tot_rx':           0,      // total packets received in this flow
-                    'max_queue':        INFINITE_BUFFER,      // capacity of the queue (buffer size)
-                    'pnf':              0,      // probability of using controller
+                    'rx':               0,          // packets received over duration
+                    'tot_rx':           0,          // total packets received in this flow
                 },  
                 'output': {},
               };
@@ -451,6 +450,7 @@ var editmode = {
     saved_data: {}, // 'key' -> data
     editmode: false,
     inputchange: {},
+    persistentchange: {},
     start_edit: function () {
       console.log('entering edit mode');
       this.editmode = true;
@@ -466,9 +466,16 @@ var editmode = {
           this.data = JSON.parse(JSON.stringify(data));
           for (dp in data) {
             this.datapaths.push(dp);
+            
+            /* see if this dp has any dynamic changes */
             if (dp in this.inputchange) {
                 for (change in this.inputchange[dp]) {
-                  this.edit_switch_input(dp, change, this.inputchange[dp][change] + data[dp].input[change]);
+                    this.edit_switch_input(dp, change, this.inputchange[dp][change] + data[dp].input[change]);
+                }
+            }
+            if (dp in this.persistentchange) {
+                for (change in this.persistentchange[dp]) {
+                    this.edit_switch_input(dp, change, this.persistentchange[dp][change]);
                 }
             }
             this.run_model(dp);
@@ -477,6 +484,14 @@ var editmode = {
           /* Update the displayed data */
           this.update_gui(this.data);
         }
+    },
+    change_switch_model: function(dpid, new_model) {
+        if (config.queueing_models[new_model]) {
+            this.data[dpid]['model'] = new_model;
+            console.log('changed '+dpid+' to use \''+new_model+'\' model');
+            this.set_editmode_change(dpid, 'queue_capacity', new_model);
+        }
+        else console.log('queueing model \''+new_model+'\' not found');
     },
     change_switch_name: function(dpid, new_name) {
         if (config.switch_configs[new_name]) {
@@ -491,14 +506,13 @@ var editmode = {
         }
         else console.log('switch config \''+new_name+'\' not found');
     },
-    set_rate_change: function(dpid, attr, value) { /* Add this to the live readings */
+    change_input_by: function(dpid, attr, value) { /* Add this to the live readings */
         if (!dpid in this.datapaths) {
-            console.log("unknown datapath "+dpid);
-            return;
+          console.log("unknown dpid: "+dpid);
+          return;
         }
         
-        /* TODO: make sure attr and value are valid */
-        
+        /* TODO: make sure attr and value are valid (copy from edit_switch_input) */
         var currentchanges = {};
         if (dpid in this.inputchange) {
           currentchanges = this.inputchange[dpid];
@@ -509,16 +523,36 @@ var editmode = {
         /* this makes change instant, but allows incorrect cumulative increases */
         // this.edit_switch_input(dp, attr, value + this.data[dp].input[attr]); 
     },
-    edit_switch_input: function(dpid, attr, value) { /* Replace the live readings */
+    set_input: function(dpid, attr, value) {
+        if (!dpid in this.datapaths) {
+          console.log("unknown dpid: "+dpid);
+          return;
+        }
+        
+        var currentchanges = {};
+        if (dpid in this.persistentchange) {
+          currentchanges = this.persistentchange[dpid];
+        }
+        console.log("newchanges:     "+attr+", "+value);
+        currentchanges[attr] = value;
+        this.persistentchange[dpid] = currentchanges;
+    },
+    edit_switch_input: function(dpid, attr, value) { /* Replaces the live readings */
         if (!this.data[dpid]) {
           console.log('unknown dpid: '+dpid);
           return;
         }
-        if (!this.data[dpid].input[attr]) {
+        if (this.data[dpid].input[attr]) {
+          this.data[dpid].input[attr] = value;
+        }
+        else if (this.data[dpid][attr]) {
+          this.data[dpid][attr] = value;
+        }
+        else {
           console.log('unknown attr: '+attr);
           return;
         }
-        this.data[dpid].input[attr] = value;
+        console.log('changed '+dpid+'\'s '+attr+' to '+value);
     },
     run_model: function(dpid) {
         /* 
@@ -534,7 +568,17 @@ var editmode = {
         */
         
         var model_name = this.data[dpid].model;
-        var out = output(model_name,this.data[dpid].input);
+        var input = {
+            'arrival_rate':     this.data[dpid].input.arrival_rate,
+            'service_rate':     this.data[dpid].input.service_rate,
+            'service_variance': this.data[dpid].input.service_variance,
+            'rx':               this.data[dpid].input.rx,
+            'tot_rx':           this.data[dpid].input.tot_rx,
+            'pnf':              this.data[dpid].pnf,
+            'queue_capacity':   this.data[dpid].queue_capacity,
+        }
+        console.log(model_name);
+        var out = output(model_name,input);
         
         this.data[dpid].output.load    = out.load;
         this.data[dpid].output.buflen  = out.length;
@@ -597,8 +641,8 @@ var test_edit_part2 = function() {
 }
 
 function main() {
-    initialize_topology();
-    // init_local();
+    // initialize_topology();
+    init_local();
 }
 
 main();
