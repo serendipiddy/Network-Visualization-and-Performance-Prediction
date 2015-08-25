@@ -12,4 +12,4 @@ ryu-manager --observe-links ryu/app/perfvis/perfvis.py
 ```
 The script runryu, when edited to point to the correct directories, will copy this application and run it. Scripts are also included to set up a mininet session running OpenFlow v1.3, runsingle and runtopo.
 
-Once running, it can be accessed via a browser, http://<controller-ip>:8080.
+Once running, it can be accessed via a browser, http://[controller-ip]:8080.
