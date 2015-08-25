@@ -16,6 +16,9 @@ import process_stats_flow_agg as processfg
 from performance_server import PerformanceServerController
 
 
+# from ryu.topology.api import get_switch, get_link
+# import json
+
 class PerformanceServerApp(app_manager.RyuApp):
     _CONTEXTS = {
         'wsgi': WSGIApplication,
@@ -76,6 +79,12 @@ class PerformanceServerApp(app_manager.RyuApp):
                 elif (self.statstype == 'port'):
                   self.send_port_stats_request(dp)
                 count += 1
+                
+                ## topology experimenting
+                # links = get_link(self)
+                # body = json.dumps([link.to_dict() for link in links])
+                # print("%d %s" % (dp.id, body))
+                
             if self.datapaths.values():
                 self.req_count += 1
                 print("Counted %d datapaths. Request #%d sent" % (count, self.req_count))

@@ -13,10 +13,16 @@ var CONF = {
 
 var sample = {
   "0000000000000001": [
-    {"flow_id": "e6c8d3da6b2315b0bc929bc63ce929aa", "packet_count": 0, "arrival_rate": 0.0, "total_packets": 100},
-    {"flow_id": "bc929bc63ce929aae6c8d3da6b2315b0","packet_count": 0, "arrival_rate": 0.0, "total_packets": 100},
+    {"flow_id": "e6c8d3da6b2315b0bc929bc63ce929aa", "packet_count": 0, "arrival_rate": 100.0, "total_packets": 100},
+    {"flow_id": "bc929bc63ce929aae6c8d3da6b2315b0","packet_count": 0, "arrival_rate": 100.0, "total_packets": 100},
+  ],
+  "0000000000000002": [
+    {"flow_id": "e6c8d3da6b2315b0bc929bc63ce929aa", "packet_count": 0, "arrival_rate": 100.0, "total_packets": 100},
+    {"flow_id": "bc929bc63ce929aae6c8d3da6b2315b0","packet_count": 0, "arrival_rate": 100.0, "total_packets": 100},
   ]
 };
+var sample_switches = [{"ports": [{"hw_addr": "62:97:f2:85:7b:af", "name": "s1-eth1", "port_no": "00000001", "dpid": "0000000000000001"}, {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}], "dpid": "0000000000000001"}, {"ports": [{"hw_addr": "82:bd:da:72:ca:bb", "name": "s2-eth1", "port_no": "00000001", "dpid": "0000000000000002"}, {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}], "dpid": "0000000000000002"}];
+var sample_links = [{"src": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}, "dst": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}}, {"src": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}, "dst": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}}];
 
 var ws = new WebSocket("ws://" + location.host + "/v1.0/topology/ws");
 ws.onmessage = function(event) {
@@ -50,7 +56,7 @@ ws.onmessage = function(event) {
     // create and send RPC reply
     var result = "";
     try {
-      result = model_[data.method](data.params[0]);
+      result = stats[data.method](data.params[0]);
     } catch(err) {console.log("ERROR"+err);}
     
     var ret = {"id": data.id, "jsonrpc": "2.0", "result": result};
@@ -164,17 +170,19 @@ elem.update = function () {
       // .data(process_data(topo.nodes,"undefined"));
     var statEnter = this.stats.enter().append("g")
         .attr("class","stats"); // this is where the interactivity will be added
+        
     statEnter.append("text").attr("class","dpid")
         .attr("x",30).attr("y",-20).text(function(d) {return "dpid:"+dpid_to_int(d.dpid);});
-    statEnter.append("text").attr("class","rx")
-        .attr("x",30).attr("y",-5).text("Rx:  (..)");
-    statEnter.append("text").attr("class","total")
-        .attr("x",90).attr("y",-5).text("Total:  (..)");
         
     statEnter.append("text").attr("class","lambda")
-        .attr("x",30).attr("y",10).text(LAM+": (..)");
+        .attr("x",30).attr("y",-5).text(LAM+": (..)");
     statEnter.append("text").attr("class","mu")
-        .attr("x",90).attr("y",10).text(MU+": (..)");
+        .attr("x",90).attr("y",-5).text(MU+": (..)");
+        
+    statEnter.append("text").attr("class","rx")
+        .attr("x",30).attr("y",10).text("Rx:  (..)");
+    statEnter.append("text").attr("class","total")
+        .attr("x",90).attr("y",10).text("Total:  (..)");
         
     // statEnter.append("text").attr("class","controllerTx")
         // .attr("x",30).attr("y",25).text("to_ctrl: (..)");
@@ -355,18 +363,36 @@ var rpc = {
     },
 }
 
-var model_ = {
-    model_nodes: {}, 
+var stats = {
+    stats_nodes: {}, 
     process_stats: function (nodes, stats) {
-        var mn_length = 0;
-        for (s in stats) { /* Create this.model_nodes */
-          if (!this.model_nodes[s]) {
-            this.model_nodes[s] = {};
-          }
-          mn_length++;
+        var sn_length = 0;
+        
+        /* Create this.stats_nodes */
+        for (dpid in stats) { // 'in' uses the keys from stats => the dpid
+            if (!this.stats_nodes[dpid]) {
+              this.stats_nodes[dpid] = {
+                    'dpid':             dpid,
+                    'switch_name':      config.switch_default, /* 'pica8' 'openWRT' 'facebook' etc */ // determined from controller?
+                    'model':            config.model_default, // type of model used for this node
+                
+                /* input and blank output of the model */
+                'input':  {  // TODO: will be a list of flows, atm is an aggregate of all flows
+                    'arrival_rate':     0,
+                    'service_rate':     config.switch_configs[config.switch_default].service_rate,  
+                    'service_variance': config.switch_configs[config.switch_default].service_variance, 
+                    'rx':               0,      // packets received over duration
+                    'tot_rx':           0,      // total packets received in this flow
+                    'max_queue':        INFINITE_BUFFER,      // capacity of the queue (buffer size)
+                    'pnf':              0,      // probability of using controller
+                },  
+                'output': {},
+              };
+            }
+            sn_length++;
         }
         
-        if (nodes.length != mn_length) {
+        if (nodes.length != sn_length) {
           console.log("error, node and stat lengths differ");
           return NOT_READY;
         }
@@ -375,55 +401,155 @@ var model_ = {
          * TODO: add another node for the controller
          */
         
-        /* Populate the node structure with the ports info?       >>>  LLINK */
+        /* Populate the node structure with the flow info */
         for (var i = 0; i < nodes.length; i++) { 
           var dpid = nodes[i].dpid;
-          var n = {'dpid':dpid};  // for each node
           
-          data = stats[dpid]; // data = {"flow_id":"e6c8d3da6b2315b0bc929bc63ce929aa","packet_count":0,"arrival_rate":0,"total_packets":100},
+          // data = {"flow_id":,"packet_count":,"arrival_rate":,"total_packets":},
+          data = stats[dpid]; 
           
           console.log("Processing node "+dpid);
           if (data === "loading")
             return NOT_READY;
-          
-          /* input and output of the model */
-          n.input = {};  // TODO: will be a list of flows, atm is an aggregate of all flows
-          n.output = {};
-          
-          n.switchModel = 'openvswitch_vm' /* 'pica8' 'openWRT' 'facebook' etc */ // determined from controller?
-          n.input.service_rate  = 56625;  // 17.66us
-          n.input.arrival_rate = 0;
-          n.input.rx           = 0;      // packets received over duration
-          n.input.tot_rx       = 0;      // total packets received in this flow
-          n.input.pnf          = 0;      // probability of using controller
-          n.input.qstrategy    = 'mm1';  // type of model used for this node
-          n.input.capacity     = INFINITE_BUFFER;   // capacity of the queue (buffer size)
           
           /* Compute this in the model itself..? 
            * **At the moment it's aggregating the flows for the switch** 
            */
           console.log("  Processing flows: ");
           for (var f = 0; f < data.length; f++) {
-            console.log("    flow: "+data[f].flow_id);
-            n.input.arrival_rate += data[f].arrival_rate;
-            n.input.rx           += data[f].packet_count;
-            n.input.tot_rx       += data[f].total_packets;
+            this.stats_nodes[dpid].input.arrival_rate = 0;
+            this.stats_nodes[dpid].input.rx           = 0;
+            this.stats_nodes[dpid].input.tot_rx       = 0;
           }
           
-          /* Apply the model */
-          model = new mm1();
-          n.output.load    =     model.rho (n.input.arrival_rate, n.input.service_rate);
-          n.output.buflen  =  model.length (n.input.arrival_rate, n.input.service_rate);
-          n.output.sojourn = model.sojourn (n.input.arrival_rate, n.input.service_rate);
-          
-          this.model_nodes[dpid] = n;
+          for (var f = 0; f < data.length; f++) {
+            console.log("    flow: "+data[f].flow_id);
+            this.stats_nodes[dpid].input.arrival_rate += data[f].arrival_rate;
+            this.stats_nodes[dpid].input.rx           += data[f].packet_count;
+            this.stats_nodes[dpid].input.tot_rx       += data[f].total_packets;
+          }
         }
-        return this.model_nodes;
+        return this.stats_nodes;
     },
-    change_input: function(dp, attr, val) {
-      this.mode_nodes[dp][attr] = val;
+    event_update_statistics: function(new_stats) {
+        console.log("Updating statistics");
+        
+        /* Update stats */
+        this.process_stats(topo.nodes, new_stats);
+        
+        if (this.stats_nodes === NOT_READY) 
+          return "";
+          
+        editmode.update_data(this.stats_nodes);
+        return "";
+    },
+}
+
+var editmode = {
+    data: {},
+    datapaths: [],
+    saved_data: {}, // 'key' -> data
+    editmode: false,
+    inputchange: {},
+    start_edit: function () {
+      console.log('entering edit mode');
+      this.editmode = true;
+    },
+    end_edit: function () {
+      console.log('leaving edit mode');
+      /* this.data = stats.stats_nodes // should I? */
+      this.editmode = false;
+    },
+    update_data: function (data) {
+        if (!this.editmode) {
+          /* Apply the model */
+          this.data = JSON.parse(JSON.stringify(data));
+          for (dp in data) {
+            this.datapaths.push(dp);
+            if (dp in this.inputchange) {
+                for (change in this.inputchange[dp]) {
+                  this.edit_switch_input(dp, change, this.inputchange[dp][change] + data[dp].input[change]);
+                }
+            }
+            this.run_model(dp);
+          }
+          
+          /* Update the displayed data */
+          this.update_gui(this.data);
+        }
+    },
+    change_switch_name: function(dpid, new_name) {
+        if (config.switch_configs[new_name]) {
+            new_config = config.switch_configs[new_name];
+            this.data[dpid]['switch_name']      = new_name;
+            this.data[dpid].input['service_rate']     = new_config.service_rate;
+            this.data[dpid].input['service_variance'] = new_config.service_variance;
+            
+            this.run_model(dpid);
+            this.update_gui(this.data);
+            console.log("changed "+dpid+" to "+new_name);
+        }
+        else console.log('switch config \''+new_name+'\' not found');
+    },
+    set_rate_change: function(dpid, attr, value) { /* Add this to the live readings */
+        if (!dpid in this.datapaths) {
+            console.log("unknown datapath "+dpid);
+            return;
+        }
+        
+        /* TODO: make sure attr and value are valid */
+        
+        var currentchanges = {};
+        if (dpid in this.inputchange) {
+          currentchanges = this.inputchange[dpid];
+        }
+        console.log("newchanges:     "+attr+", "+value);
+        currentchanges[attr] = value;
+        this.inputchange[dpid] = currentchanges;
+        /* this makes change instant, but allows incorrect cumulative increases */
+        // this.edit_switch_input(dp, attr, value + this.data[dp].input[attr]); 
+    },
+    edit_switch_input: function(dpid, attr, value) { /* Replace the live readings */
+        if (!this.data[dpid]) {
+          console.log('unknown dpid: '+dpid);
+          return;
+        }
+        if (!this.data[dpid].input[attr]) {
+          console.log('unknown attr: '+attr);
+          return;
+        }
+        this.data[dpid].input[attr] = value;
+    },
+    run_model: function(dpid) {
+        /* 
+          get model from this.data[dpid].qstrategy
+          model = this.data[dpid].qstrategy;
+          using the values from config:
+              for (fn_name in config[model]['outout']) {
+                this.data[dpid].output[fn_name] = model.[fn_name] ....
+              }
+              
+          or maybe read the input values into {for i in input -> arrival_rate, service_rate} pass that object to the model
+            then read back an output object, set data.output = that_output..?
+        */
+        
+        var model_name = this.data[dpid].model;
+        var out = output(model_name,this.data[dpid].input);
+        
+        this.data[dpid].output.load    = out.load;
+        this.data[dpid].output.buflen  = out.length;
+        this.data[dpid].output.sojourn = out.sojourn;
+    },
+    add_switch: function(to_clone) {
+        /* 
+            need some dpid allocation system
+            deep copy of the given node (or define some blank one?)
+            then need to edit the topology
+        */
     },
     update_gui: function (data) {
+        console.log('Updating GUI')
+        // console.log(data)
         elem.stats.selectAll(".dpid").text(  function(d) {
                 return "dpid:    "+dpid_to_int(d.dpid); });
         elem.stats.selectAll(".rx").text(  function(d) { 
@@ -440,23 +566,10 @@ var model_ = {
                 return "load:    "+data[d.dpid].output.load.toFixed(4); });
         elem.stats.selectAll(".bufflen").text(  function(d) { 
                 return "length:  "+data[d.dpid].output.buflen.toFixed(4); });
+        // if(Object.getOwnPropertyNames(ratechange).length > 0))
+          
     },
-    event_update_statistics: function(new_stats) {
-        console.log("Updating statistics");
-        
-        /* Apply the model */
-        model_data = this.process_stats(topo.nodes, new_stats);
-        
-        if (model_data === NOT_READY) 
-          return "";
-        
-        /* Update the displayed data */
-        this.update_gui(model_data);
-        
-        return "";
-    },
-}
-
+};
 
 function initialize_topology() {
     d3.json("/v1.0/topology/switches", function(error, switches) {
@@ -467,8 +580,25 @@ function initialize_topology() {
     });
 }
 
+function init_local() {
+    topo.initialize({switches: sample_switches, links: sample_links});
+    elem.update();
+    stats.event_update_statistics(sample);
+}
+
+var test_edit_part1 = function(val) {
+  editmode.start_edit();
+  editmode.edit_switch_input(editmode.datapaths[0],'arrival_rate',val);
+  editmode.update_gui(editmode.data);
+}
+var test_edit_part2 = function() {
+  editmode.run_model(editmode.datapaths[0]);
+  editmode.update_gui(editmode.data);
+}
+
 function main() {
     initialize_topology();
+    // init_local();
 }
 
 main();
