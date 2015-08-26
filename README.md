@@ -13,3 +13,28 @@ ryu-manager --observe-links ryu/app/perfvis/perfvis.py
 The script runryu, when edited to point to the correct directories, will copy this application and run it. Scripts are also included to set up a mininet session running OpenFlow v1.3, runsingle and runtopo.
 
 Once running, it can be accessed via a browser, http://[controller-ip]:8080.
+
+## Config
+Models and the switch brand are declared in perfvis/html/config.js
+
+Switches can be added here to set their average service rate, and can be selected from the GUI interface. They are defined in config.switch_configs as:
+```JavaScript
+'switch_name': {
+    'service_rate':    0, // the average number of packets it can service per second
+    'service_variance':0, // the variance in that average
+}
+```
+
+Models' input and output are declared along with the name of the model. Below is a basic model description.
+```JavaScript
+'model_name':  { 
+    'description': '',
+    'model_in': [ 'service_rate', 'arrival_rate' ],
+    'model_out': [ 'load', 'length', 'sojourn' ],
+}
+```
+Additionally a model needs to register itself, accept the declared inputs and produce the declared outputs.
+To register a model, it needs to be included in index.html and it must add itself to the config with:
+```JavaScript
+config.get_model['model_name'] = model_name;
+```
