@@ -1,3 +1,35 @@
+/* Side bar */
+html, body {
+    height: 100%;
+}
+
+#side-bar {
+    width: 200px;
+    border-right: 1px solid #000000;
+    margin: 2px;
+    padding: 5px;
+    /* height: 100%; */
+    overflow: hidden;
+    float: left;
+}
+
+#specs ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+}
+
+#editmode {
+  margin: 0px;
+  margin-bottom: 5px;
+  /* padding: 0px; */
+}
+
+/* .ul-title {
+  font-weight: bold;
+} */
+
 /* topology */
 #topology {  
     border: 1px solid #000000;  

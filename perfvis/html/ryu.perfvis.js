@@ -4,36 +4,20 @@ var CONF = {
         height: 40
     },
     force: {
-        width: 960,
+        // width: 700,
+        width: $(window).width()-300,
         height: 500,
         dist: 200,
         charge: -600
+    },
+    node: {
+        radius: 20,
+        size: 20
     }
 };
 
-var sample = {
-  "0000000000000001": [
-    {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
-    {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
-  ],
-  "0000000000000002": [
-    {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
-    {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
-  ]
-};
-var sample_switches = [{"ports": [{"hw_addr": "62:97:f2:85:7b:af", "name": "s1-eth1", "port_no": "00000001", "dpid": "0000000000000001"}, {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}], "dpid": "0000000000000001"}, {"ports": [{"hw_addr": "82:bd:da:72:ca:bb", "name": "s2-eth1", "port_no": "00000001", "dpid": "0000000000000002"}, {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}], "dpid": "0000000000000002"}];
-var sample_links = [{"src": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}, "dst": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}}, {"src": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}, "dst": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}}];
-var OFPorts = {
-    0xffffff00: 'OFPP_MAX',
-    0xfffffff8: 'OFPP_IN_PORT',
-    0xfffffff9: 'OFPP_TABLE',
-    0xfffffffa: 'OFPP_NORMAL',
-    0xfffffffb: 'OFPP_FLOOD',
-    0xfffffffc: 'OFPP_ALL',
-    0xfffffffd: 'OFPP_CONTROLLER',
-    0xfffffffe: 'OFPP_LOCAL',
-    0xffffffff: 'OFPP_ANY'
-}
+/* Topology functions */
+/* SVG element binding */
 
 var ws = new WebSocket("ws://" + location.host + "/v1.0/topology/ws");
 ws.onmessage = function(event) {
@@ -49,29 +33,6 @@ ws.onmessage = function(event) {
 var glob = "";
 var LAM = String.fromCharCode(parseInt("03BB",16));
 var MU = String.fromCharCode(parseInt("03BC",16));
-var NOT_READY = -1;
-
-/* For receiving performance information */
-// current_stats = "";
-// current_processed = "";
-var ws = new WebSocket("ws://" + location.host + "/v1.0/performance/ws");
-ws.onmessage = function(event) {
-    // Process the data received
-    var data = JSON.parse(event.data);
-    
-    console.log("Method:"+data.method);
-    // console.log("Params:"+JSON.stringify(data.params[0]));
-
-    // create and send RPC reply
-    var result = "";
-    try {
-      result = stats[data.method](data.params[0]);
-    } catch(err) {console.log("ERROR"+err);}
-    
-    var ret = {"id": data.id, "jsonrpc": "2.0", "result": result};
-    console.log("Ret: ",JSON.stringify(ret));
-    this.send(JSON.stringify(ret));
-}
 
 function trim_zero(obj) {
     return String(obj).replace(/^0+/, "");
@@ -91,9 +52,6 @@ var elem = {
         .attr("id", "topology")
         .attr("width", CONF.force.width)
         .attr("height", CONF.force.height),
-    console: d3.select("body").append("div")
-        .attr("id", "console")
-        .attr("width", CONF.force.width),
 };
 function _tick() {
     elem.link.attr("x1", function(d) { return d.source.x; })
@@ -111,30 +69,12 @@ function _tick() {
 elem.drag = elem.force.drag().on("dragstart", _dragstart);
 function _dragstart(d) {
     var dpid = dpid_to_int(d.dpid)
-    // d3.json("/stats/port/" + dpid, function(e, data) {
-    d3.json("/v1.0/performance/current", function(e, data) {
-        // flows = data[dpid];
-        flows = data[d.dpid];
-        console.log("PORTS:"+JSON.stringify(flows));
-        // console.log("FLOWS:"+JSON.stringify(flows[1]));
-        elem.console.selectAll("p")
-            .remove();
-        p = elem.console.append("p")
-            // .append("P")
-            // .text(function (d) { return JSON.stringify(d); }); // only use d what .data(where_the_d_comes_from) is used
-            .text(function() {
-              return JSON.stringify(flows);
-            });
-    });
-    
-    // d3.json("/stats/flow/" + dpid, function(e, data) {
-        // flows = data[dpid];
-        // console.log(flows);
-        // elem.console.selectAll("ul").remove();
-        // li = elem.console.append("ul")
-            // .selectAll("li");
-        // li.data(flows).enter().append("li")
-            // .text(function (d) { return JSON.stringify(d, null, " "); });
+    // d3.json("/v1.0/performance/current", function(e, data) {
+        // flows = data[d.dpid];
+        // elem.console.selectAll("p")
+            // .remove();
+        // p = elem.console.append("p")
+            // .text(function() {return JSON.stringify(flows);});
     // });
     
     d3.select(this).classed("fixed", d.fixed = true);
@@ -162,17 +102,35 @@ elem.update = function () {
         .attr("class", "node")
         .on("dblclick", function(d) { d3.select(this).classed("fixed", d.fixed = false); })
         .call(this.drag);
-    nodeEnter.append("image")
-        .attr("xlink:href", "./router.svg")
-        .attr("x", -CONF.image.width/2)
-        .attr("y", -CONF.image.height/2)
-        .attr("width", CONF.image.width)
-        .attr("height", CONF.image.height);
+    nodeEnter.append("circle")
+        .attr("cx", -CONF.node.size/2)
+        .attr("cy", -CONF.node.size/2)
+        .attr("r", CONF.node.size)
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .attr("fill", "white");
     nodeEnter.append("text")
-        .attr("dx", -CONF.image.width/2)
-        .attr("dy", CONF.image.height-10)
-        .text(function(d) { return "dpid: " + trim_zero(d.dpid); });
-
+        .attr("dx", function(d) {
+            length = trim_zero(d.dpid).length;
+            return -CONF.node.size/2-(3*length);
+        })
+        .attr("dy", function(d) {
+            length = trim_zero(d.dpid).length;
+            return -CONF.node.size/2+(4*length);
+        })
+        .text(function(d) { return trim_zero(d.dpid); });
+    /* nodeEnter.append("image")
+        // .attr("xlink:href", "./router.svg")
+        // .attr("x", -CONF.image.width/2)
+        // .attr("y", -CONF.image.height/2)
+        // .attr("width", CONF.image.width)
+        // .attr("height", CONF.image.height);
+    // nodeEnter.append("text")
+        // .attr("dx", -CONF.image.width/2)
+        // .attr("dy", CONF.image.height-10)
+        // .text(function(d) { return "dpid: " + trim_zero(d.dpid); });
+    */
+    
     /* Statistics */
     this.stats = this.stats.data(topo.nodes);
     this.stats.exit().remove(); // makes stats disappear with the topology
@@ -189,17 +147,17 @@ elem.update = function () {
     statEnter.append("text").attr("class","mu")
         .attr("x",90).attr("y",-5).text(MU+": "+default_val);
         
-    statEnter.append("text").attr("class","rx")
-        .attr("x",30).attr("y",10).text("Rx:  "+default_val);
-    statEnter.append("text").attr("class","total")
-        .attr("x",90).attr("y",10).text("Total:  "+default_val);
+    // statEnter.append("text").attr("class","rx")
+        // .attr("x",30).attr("y",10).text("Rx:  "+default_val);
+    // statEnter.append("text").attr("class","total")
+        // .attr("x",90).attr("y",10).text("Total:  "+default_val);
         
     statEnter.append("text").attr("class","sojourn")
-        .attr("x",30).attr("y",25).text("sojourn: "+default_val);
+        .attr("x",30).attr("y",10).text("sojourn: "+default_val);
     statEnter.append("text").attr("class","load")
-        .attr("x",30).attr("y",40).text("load: "+default_val);
+        .attr("x",30).attr("y",25).text("load: "+default_val);
     statEnter.append("text").attr("class","bufflen")
-        .attr("x",30).attr("y",55).text("length: "+default_val);
+        .attr("x",30).attr("y",40).text("length: "+default_val);
         
     /* Ports */
     var ports = topo.get_ports();
@@ -274,7 +232,7 @@ var topo = {
     },
     get_node_index: function (node) {
         for (var i = 0; i < this.nodes.length; i++) {
-            if (node.dpid == this.nodes[i].dpid) {
+            if (node.dpid === this.nodes[i].dpid) {
                 return i;
             }
         }
@@ -282,10 +240,10 @@ var topo = {
     },
     get_link_index: function (link) {
         for (var i = 0; i < this.links.length; i++) {
-            if (link.src.dpid == this.links[i].port.src.dpid &&
-                    link.src.port_no == this.links[i].port.src.port_no &&
-                    link.dst.dpid == this.links[i].port.dst.dpid &&
-                    link.dst.port_no == this.links[i].port.dst.port_no) {
+            if (link.src.dpid === this.links[i].port.src.dpid &&
+                    link.src.port_no === this.links[i].port.src.port_no &&
+                    link.dst.dpid === this.links[i].port.dst.dpid &&
+                    link.dst.port_no === this.links[i].port.dst.port_no) {
                 return i;
             }
         }
@@ -367,265 +325,6 @@ var rpc = {
     },
 }
 
-var stats = {
-    stats_nodes: {}, 
-    process_stats: function (nodes, stats) {
-        var sn_length = 0;
-        
-        /* Create this.stats_nodes */
-        for (dpid in stats) { // 'in' uses the keys from stats => the dpid
-            if (!this.stats_nodes[dpid]) {
-              this.stats_nodes[dpid] = {
-                'dpid':             dpid,
-                'switch_name':      config.switch_default, /* 'pica8' 'openWRT' 'facebook' etc */ // determined from controller?
-                'model':            config.model_default, // type of model used for this node
-                'pnf':              0,                    // probability of using controller
-                'queue_capacity':   NOT_READY,            // capacity of the queue (buffer size)
-              };
-            } 
-            /* TODO: check this new way preserves the mode,switch and pnf etc if they're changed in Editmode */
-            this.stats_nodes[dpid]
-                .input =  {
-                    'arrival_rate':     0,
-                    'depart_rate':      0,
-                    'service_rate':     config.switch_configs[config.switch_default].service_rate,  
-                    'service_variance': config.switch_configs[config.switch_default].service_variance, 
-                    'rx_packets':       0,          // packets received over duration
-                    'tx_packets':       0,          // packets sent over duration
-                    'total_rx':         0,          // total packets received on this port
-                    'total_tx':         0,          // total packets sent on this port
-                };
-            this.stats_nodes[dpid].output = {};
-            sn_length++;
-        }
-        
-        if (nodes.length != sn_length) {
-            console.log("error, node and stat lengths differ");
-            return NOT_READY;
-        }
-        
-        /* TODO: add another node for the controller */
-        
-        /* Populate the node structure with the flow info */
-        for (var i = 0; i < nodes.length; i++) { 
-            var dpid = nodes[i].dpid;
-            data = stats[dpid]; 
-            console.log("Processing node "+dpid);
-            
-            if (data === "loading")
-              return NOT_READY;
-            
-            console.log("  Processing ports: ");
-            this.stats_nodes[dpid].input.ports = {};
-            for (var f = 0; f < data.length; f++) {
-                console.log("    port: "+port_no);
-                var port = data[f];
-                var port_no = data[f].port_no;
-                
-                if (!(port_no in OFPorts)) {
-                  this.stats_nodes[dpid].input.depart_rate  += port['arrival_rate'];
-                  this.stats_nodes[dpid].input.arrival_rate += port['depart_rate'];
-                  this.stats_nodes[dpid].input.rx_packets   += port['rx_packets'];
-                  this.stats_nodes[dpid].input.tx_packets   += port['tx_packets'];
-                  this.stats_nodes[dpid].input.total_rx     += port['total_rx'];
-                  this.stats_nodes[dpid].input.total_tx     += port['total_tx'];
-                } else console.log(port_no+" is not a port");
-                
-                this.stats_nodes[dpid].input.ports[port_no] = port;
-            }
-        }
-        // return this.stats_nodes;
-    },
-    event_update_statistics: function(new_stats) {
-        console.log("Updating statistics");
-        
-        /* Update stats */
-        // console.log(JSON.stringify(this.process_stats(topo.nodes, new_stats),null,2));
-        this.process_stats(topo.nodes, new_stats);
-        
-        if (this.stats_nodes === NOT_READY) 
-          return "";
-          
-        editmode.update_data(this.stats_nodes);
-        return "";
-    },
-}
-
-var editmode = {
-    data: {},
-    datapaths: [],
-    saved_data: {}, // 'key' -> data
-    editmode: false,
-    inputchange: {}, /* Changes that sit on top of the live data */
-    persistentchange: {}, /* CHanges that replace the live data */
-    start_edit: function () { /* Stops live readings */
-      console.log('entering edit mode');
-      this.editmode = true;
-      this.graph = {
-          nodes: topo.nodes,
-          links: topo.links,
-          node_index: topo.node_index,
-      }
-    },
-    end_edit: function () { /* Resumes live readings */
-      console.log('leaving edit mode');
-      /* this.data = stats.stats_nodes // should I? */
-      this.editmode = false;
-    },
-    update_data: function (data) { /* Replace this.data with live readings */
-        if (!this.editmode) {
-          /* Apply the model */
-          this.data = JSON.parse(JSON.stringify(data));
-          for (dp in data) {
-            this.datapaths.push(dp);
-            
-            /* see if this dp has any dynamic changes */
-            if (dp in this.inputchange) {
-                for (change in this.inputchange[dp]) {
-                    this.edit_switch_input(dp, change, this.inputchange[dp][change] + data[dp].input[change]);
-                }
-            }
-            if (dp in this.persistentchange) {
-                for (change in this.persistentchange[dp]) {
-                    this.edit_switch_input(dp, change, this.persistentchange[dp][change]);
-                }
-            }
-            this.run_model(dp);
-          }
-          
-          /* Update the displayed data */
-          this.update_gui(this.data);
-        }
-    },
-    change_switch_model: function(dpid, new_model) { /* Change the model used by given switch */
-        if (config.queueing_models[new_model]) {
-            this.data[dpid]['model'] = new_model;
-            console.log('changed '+dpid+' to use \''+new_model+'\' model');
-            this.set_editmode_change(dpid, 'queue_capacity', new_model);
-        }
-        else console.log('queueing model \''+new_model+'\' not found');
-    },
-    change_switch_name: function(dpid, new_name) { /* Change the switch hardware used by given switch */
-        if (config.switch_configs[new_name]) {
-            new_config = config.switch_configs[new_name];
-            this.data[dpid]['switch_name']      = new_name;
-            this.data[dpid].input['service_rate']     = new_config.service_rate;
-            this.data[dpid].input['service_variance'] = new_config.service_variance;
-            
-            this.run_model(dpid);
-            this.update_gui(this.data);
-            console.log("changed "+dpid+" to "+new_name);
-        }
-        else console.log('switch config \''+new_name+'\' not found');
-    },
-    change_input_by: function(dpid, attr, value) { /* Add this to the live readings */
-        if (!(dpid in this.datapaths)) {
-          console.log("unknown dpid: "+dpid);
-          return;
-        }
-        
-        /* TODO: make sure attr and value are valid (copy from edit_switch_input) */
-        var currentchanges = {};
-        if (dpid in this.inputchange) {
-          currentchanges = this.inputchange[dpid];
-        }
-        console.log("newchanges:     "+attr+", "+value);
-        currentchanges[attr] = value;
-        this.inputchange[dpid] = currentchanges;
-        /* this makes change instant, but allows incorrect cumulative increases */
-        // this.edit_switch_input(dp, attr, value + this.data[dp].input[attr]); 
-    },
-    set_input: function(dpid, attr, value) { /* Set an attribute to remain during updates */
-        if (!(dpid in this.datapaths)) {
-          console.log("unknown dpid: "+dpid);
-          return;
-        }
-        
-        var currentchanges = {};
-        if (dpid in this.persistentchange) {
-          currentchanges = this.persistentchange[dpid];
-        }
-        console.log("newchanges:     "+attr+", "+value);
-        currentchanges[attr] = value;
-        this.persistentchange[dpid] = currentchanges;
-    },
-    edit_switch_input: function(dpid, attr, value) { /* Replaces the live readings, during edit mode */
-        if (!(this.data[dpid])) {
-          console.log('unknown dpid: '+dpid);
-          return;
-        }
-        if (this.data[dpid].input[attr]) {
-          this.data[dpid].input[attr] = value;
-        }
-        else if (this.data[dpid][attr]) {
-          this.data[dpid][attr] = value;
-        }
-        else {
-          console.log('unknown attr: '+attr);
-          return;
-        }
-        console.log('changed '+dpid+'\'s '+attr+' to '+value);
-    },
-    run_model: function(dpid) { /* Applies to switches, getting their performance information */
-        /* 
-          get model from this.data[dpid].qstrategy
-          model = this.data[dpid].qstrategy;
-          using the values from config:
-              for (fn_name in config[model]['outout']) {
-                this.data[dpid].output[fn_name] = model.[fn_name] ....
-              }
-              
-          or maybe read the input values into {for i in input -> arrival_rate, service_rate} pass that object to the model
-            then read back an output object, set data.output = that_output..?
-        */
-        
-        var model_name = this.data[dpid].model;
-        var input = {
-            'arrival_rate':     this.data[dpid].input.arrival_rate,
-            'service_rate':     this.data[dpid].input.service_rate,
-            'service_variance': this.data[dpid].input.service_variance,
-            'rx':               this.data[dpid].input.rx,
-            'tot_rx':           this.data[dpid].input.tot_rx,
-            'pnf':              this.data[dpid].pnf,
-            'queue_capacity':   this.data[dpid].queue_capacity,
-        }
-        console.log(model_name);
-        var out = output(model_name,input);
-        
-        this.data[dpid].output.load    = out.load;
-        this.data[dpid].output.buflen  = out.length;
-        this.data[dpid].output.sojourn = out.sojourn;
-    },
-    add_switch: function(to_clone) { /* Artificially adds a switch to the network */
-        /* 
-            need some dpid allocation system
-            deep copy of the given node (or define some blank one?)
-            then need to edit the topology
-        */
-    },
-    update_gui: function (data) { /* Updates the displayed performance values */
-        console.log('Updating GUI')
-        elem.stats.selectAll(".dpid").text(  function(d) {
-                return "dpid:    "+dpid_to_int(d.dpid); });
-        elem.stats.selectAll(".rx").text(  function(d) { 
-                return "Rx:      "+data[d.dpid].input.rx_packets; });
-        elem.stats.selectAll(".total").text(  function(d) { 
-                return "Total:   "+data[d.dpid].input.total_rx; });
-        elem.stats.selectAll(".lambda").text(  function(d) { 
-                return LAM+":    "+data[d.dpid].input.arrival_rate.toFixed(2); });
-        elem.stats.selectAll(".mu").text(  function(d) { 
-                return MU+":     "+data[d.dpid].input.service_rate.toFixed(2); });
-        elem.stats.selectAll(".sojourn").text(  function(d) { 
-                return "sojourn: "+data[d.dpid].output.sojourn.toFixed(4); });
-        elem.stats.selectAll(".load").text(  function(d) { 
-                return "load:    "+data[d.dpid].output.load.toFixed(4); });
-        elem.stats.selectAll(".bufflen").text(  function(d) { 
-                return "length:  "+data[d.dpid].output.buflen.toFixed(4); });
-        // if(Object.getOwnPropertyNames(ratechange).length > 0))
-          
-    },
-};
-
 function initialize_topology() {
     d3.json("/v1.0/topology/switches", function(error, switches) {
         d3.json("/v1.0/topology/links", function(error, links) {
@@ -635,29 +334,8 @@ function initialize_topology() {
     });
 }
 
-function init_local() {
-    topo.initialize({switches: sample_switches, links: sample_links});
-    elem.update();
-    stats.event_update_statistics(sample);
-}
-
-var test_edit_part1 = function(val) {
-  editmode.start_edit();
-  editmode.edit_switch_input(editmode.datapaths[0],'arrival_rate',val);
-  editmode.update_gui(editmode.data);
-}
-var test_edit_part2 = function() {
-  editmode.run_model(editmode.datapaths[0]);
-  editmode.update_gui(editmode.data);
-}
-
-var display_graph = {
-  
-}
-
 function main() {
     initialize_topology();
-    // init_local();
 }
 
-main();
+// main();
