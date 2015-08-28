@@ -5,7 +5,7 @@ var CONF = {
     },
     force: {
         // width: 700,
-        width: $(window).width()-250-in_graph.width,
+        width: $(window).width()-250-graph_panel.width,
         height: 500,
         dist: 200,
         charge: -600

@@ -80,12 +80,12 @@ $(document).ready(function() {
   arrival_graph = d3.select("body").append("div")
           .attr("id", "graphs")
           .attr("width", CONF.force.width)
-  drawGraph();
+  // drawGraph();
 });
 
 var arrival_graph = "";
 
-var in_graph = {
+var graph_panel = {
   width: 300
 }
 
@@ -137,7 +137,7 @@ var setGraphData = function() {
   model_in.series = series;
 }
 
-var drawGraph = function() { return function() {
+var drawGraph = function() {
   var chartWidth       = 300,
       barHeight        = 20,
       groupHeight      = barHeight * model_in.series.length,
@@ -242,4 +242,4 @@ var drawGraph = function() { return function() {
       .attr('x', legendRectSize + legendSpacing)
       .attr('y', legendRectSize - legendSpacing)
       .text(function (d) { return d.label; });
-}}
+}

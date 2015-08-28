@@ -340,8 +340,8 @@ var update_gui = function () { /* Updates the displayed performance values */
             return "load:    "+data_out[d.dpid].load.toFixed(4); });
     elem.stats.selectAll(".bufflen").text(  function(d) { 
             return "length:  "+data_out[d.dpid].length.toFixed(4); });
-    setGraphData();
-    drawGraph()();
+    // setGraphData();
+    // drawGraph();
 }
 
 var display_graph = {
@@ -350,42 +350,65 @@ var display_graph = {
 
 /* Samples for testing offline */
 var sample = {
-  "0000000000000001": [
-    {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
-    {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
+  data: {
+    "0000000000000001": [
+      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
+      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
+    ],
+    "0000000000000002": [
+      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
+      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
+    ]
+  },
+  switches: [
+    { "dpid": "0000000000000001",
+      "ports": [
+        {"hw_addr": "62:97:f2:85:7b:af", "name": "s1-eth1", "port_no": "00000001", "dpid": "0000000000000001"}, 
+        {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}
+      ]}, 
+    { "dpid": "0000000000000002",
+      "ports": [
+        {"hw_addr": "82:bd:da:72:ca:bb", "name": "s2-eth1", "port_no": "00000001", "dpid": "0000000000000002"}, 
+        {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}
+      ]}
   ],
-  "0000000000000002": [
-    {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
-    {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
+  links: [
+    { "src": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}, 
+      "dst": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}
+    }, 
+    { "src": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}, 
+      "dst": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}
+    }
   ]
 };
-var sample_switches = [
-  { "dpid": "0000000000000001",
-    "ports": [
-      {"hw_addr": "62:97:f2:85:7b:af", "name": "s1-eth1", "port_no": "00000001", "dpid": "0000000000000001"}, 
-      {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}
-    ]}, 
-  { "dpid": "0000000000000002",
-    "ports": [
-      {"hw_addr": "82:bd:da:72:ca:bb", "name": "s2-eth1", "port_no": "00000001", "dpid": "0000000000000002"}, 
-      {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}
-    ]}
-];
-var sample_links = [
-  { "src": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}, 
-    "dst": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}
-  }, 
-  { "src": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}, 
-    "dst": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}
-  }
-];
 
 function init_local() {
-    topo.initialize({switches: sample_switches, links: sample_links});
+    topo.initialize({switches: sample.switches, links: sample.links});
     elem.update();
-    pf_data.event_update_statistics(topo.nodes,sample);
+    pf_data.event_update_statistics(topo.nodes,sample.data);
+    $('#loading').hide();
+    $('#control-panel').show();
     update_gui();
+    
+    var random_sample_data = function() {
+      for (dpid in sample.data) {
+        for (var i = 0; i< sample.data[dpid].length; i++) {
+          sample.data[dpid][i].arrival_rate = Math.round(Math.random() * 9500) + 500;
+        }
+      }
+    };
+      
+    setInterval(function(s) {
+      random_sample_data();
+      pf_data.event_update_statistics(topo.nodes,sample.data);
+      console.log('successful update');
+      $('#loading').hide();
+      $('#control-panel').show();
+      update_gui();
+      
+    }, 1000);
 }
 
-// init_local(); // for offline testing
-main();    // for server
+
+init_local(); // for offline testing
+// main();    // for server

@@ -19,6 +19,7 @@ html, body {
   text-align: center;
   color: #ffffff;
   background-color: #000000;
+  /* background: linear-gradient(90deg, black 5%, grey 15%); */
 }
 
 #specs ul {
@@ -75,11 +76,11 @@ body {
 
 /* grouped bar graph */
 
-#in-graph {
+#graph-panel {
   float: left;
   display: block;
   width: 300px;
-  padding: 0px;
+  padding: 5px;
   margin:  0px;
 }
 
