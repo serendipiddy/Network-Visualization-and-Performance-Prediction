@@ -18,20 +18,26 @@ var ws = new WebSocket("ws://" + location.host + "/v1.0/performance/ws");
 ws.onmessage = function(event) {
     // Process the data received
     var new_data = JSON.parse(event.data);
+    // console.log(JSON.stringify(new_data),null,2);
     
     // create and send RPC reply
     var result = "";
-    try {
+    // try { // TODO: uncomment this in final versions
       result = pf_data[new_data.method](topo.nodes,new_data.params[0]);
       if (result == NOT_READY) {
         console.log('not ready');
+        $('#control-panel').hide();
+        $('#loading').show();
       }
       else {
         console.log('successful update');
+        /* enable control panel */
+        $('#loading').hide();
+        $('#control-panel').show();
         update_gui();
       }
       result = "";
-    } catch(err) {console.log("ERROR"+err);}
+    // } catch(err) {console.log("ERROR"+err);}
     
     var ret = {"id": new_data.id, "jsonrpc": "2.0", "result": result};
     console.log("ws_performance returning: ",JSON.stringify(ret));
@@ -96,6 +102,11 @@ var pf_data = {
     event_update_statistics: function (toponodes, update) {
         var sn_length = 0;
         
+        if ($.isEmptyObject(update)) {
+          console.log('Controller still loading');
+          return NOT_READY;
+        }
+        
         /* Create this.stats_nodes */
         for (dpid in update) { 
             /* Doesn't exist, make it */
@@ -131,10 +142,6 @@ var pf_data = {
             var live = this.live_data[dpid];
             var update_dp = update[dpid];
             
-            // console.log("====== Now Updating ======");
-            // console.log("====== "+dpid+" ======");
-            
-            
             if (update_dp === "loading") {
               console.log('Controller still loading');
               return NOT_READY;
@@ -142,24 +149,32 @@ var pf_data = {
             
             // console.log('checking ports are same')
             /* check ports are the same */
+            // console.log('A:'+live.ports);
             for (var i = 0; i<update_dp.length; i++) {
-              if (!$.inArray(update_dp[i],live.ports)) { // is in update but not local
+              if ($.inArray(update_dp[i].port_no,live.ports)<0) { // is in update but not local
+                console.log('adding \'live but not local\' ports');
                 live.ports.push(update_dp[i].port_no);
-                /* TODO add to adjacent nodes using toponodes */
+                this.live_data.adjacent_nodes = topo.get_links(dpid);
               }
             }
             if (live.ports.length != update_dp.length) {
               var new_ports = [];
               for (var i = 0; i<live.ports.length; i++) {
-                if ($.inArray(live.ports[i],update_dp)) { // is local but not in update
-                  new_ports.push(live.port[i]);           // save ports in both
+                if ($.inArray(live.ports[i],update_dp>=0)) { // is local but not in update
+                  console.log('in local, and in update, so save it');
+                  new_ports.push(live.ports[i]);           // save ports in both
                 }
                 else {
-                  /* TODO remove from adjacent nodes */
-                  /* TODO remove from adjustments */
+                  console.log('removing from live ports'); // removed by replacing live.ports with new_ports below
+                  /* remove from adjacent nodes */
+                  for (var n = 0; n<this.live_data.adjacent_nodes; n++) {
+                    if (this.live_data.adjacent_nodes[n].port_no == live.ports[i])
+                    delete this.live_data.adjacent_nodes[n];
+                  }
+                  /* TODO remove from adjustments, when defined form of port adjustment */
                 }
               }
-              live.ports = new_ports;
+              this.live_data.ports = new_ports;
             }
             
             // console.log('updating live data')
@@ -325,6 +340,8 @@ var update_gui = function () { /* Updates the displayed performance values */
             return "load:    "+data_out[d.dpid].load.toFixed(4); });
     elem.stats.selectAll(".bufflen").text(  function(d) { 
             return "length:  "+data_out[d.dpid].length.toFixed(4); });
+    setGraphData();
+    drawGraph()();
 }
 
 var display_graph = {
@@ -370,5 +387,5 @@ function init_local() {
     update_gui();
 }
 
-init_local(); // for offline testing
-// main();    // for server
+// init_local(); // for offline testing
+main();    // for server

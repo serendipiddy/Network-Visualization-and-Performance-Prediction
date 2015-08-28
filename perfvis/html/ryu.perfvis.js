@@ -5,7 +5,7 @@ var CONF = {
     },
     force: {
         // width: 700,
-        width: $(window).width()-300,
+        width: $(window).width()-250-in_graph.width,
         height: 500,
         dist: 200,
         charge: -600
@@ -248,6 +248,39 @@ var topo = {
             }
         }
         return null;
+    },
+    get_links: function(dpid) { /* Added for pf_data */
+      _links = [];
+      for(var i = 0; i<this.links.length; i++) {
+        if(this.links[i].port.src.dpid == dpid) {
+          // {port_no: {dpid:, port_no:}}
+          _links.push(
+            { 'port_no': this.links[i].port.src.port_no,
+              'topo_node_idx': this.links[i].source.index,
+              'neighbour': 
+              {
+                'dpid': this.links[i].port.dst.dpid,
+                'port': this.links[i].port.dst.port_no,
+                'topo_node_idx': this.links[i].target.index
+              }
+            }
+          );
+        }
+        else if (this.links[i].port.dst.dpid) {
+          _links.push(
+            { 'port_no': this.links[i].port.dst.port_no,
+              'topo_node_idx': this.links[i].target.index,
+              'neighbour': 
+              {
+                'dpid': this.links[i].port.src.dpid,
+                'port': this.links[i].port.src.port_no,
+                'topo_node_idx': this.links[i].source.index
+              }
+            }
+          );
+        }
+      }
+      return _links;
     },
     get_ports: function () {
         var ports = [];

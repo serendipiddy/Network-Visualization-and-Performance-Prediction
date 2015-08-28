@@ -12,6 +12,14 @@ html, body {
     overflow: hidden;
     float: left;
 }
+#loading {
+  display: block;
+  border: 1px solid #000000;
+  padding: 2px;
+  text-align: center;
+  color: #ffffff;
+  background-color: #000000;
+}
 
 #specs ul {
   list-style-type: none;
@@ -61,9 +69,41 @@ html, body {
     font-size: 10px;
 }
 
-/* tool-tip bar graph */
 body {
   font: 10px sans-serif;
+}
+
+/* grouped bar graph */
+
+#in-graph {
+  float: left;
+  display: block;
+  width: 300px;
+  padding: 0px;
+  margin:  0px;
+}
+
+.chart .legend {
+  fill: black;
+  font: 14px sans-serif;
+  text-anchor: start;
+  font-size: 12px;
+}
+
+.chart text {
+  fill: white;
+  font: 10px sans-serif;
+  text-anchor: end;
+}
+
+.chart .label {
+  fill: black;
+  font: 14px sans-serif;
+  text-anchor: end;
+}
+
+.bar:hover {
+  fill: brown;
 }
 
 .axis path,
@@ -71,45 +111,4 @@ body {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
-}
-
-.bar {
-  fill: orange;
-}
-
-.bar:hover {
-  fill: orangered ;
-}
-
-.x.axis path {
-  display: none;
-}
-
-.d3-tip {
-  line-height: 1;
-  font-weight: bold;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #fff;
-  border-radius: 2px;
-}
-
-/* Creates a small triangle extender for the tooltip */
-.d3-tip:after {
-  box-sizing: border-box;
-  display: inline;
-  font-size: 10px;
-  width: 100%;
-  line-height: 1;
-  color: rgba(0, 0, 0, 0.8);
-  content: "\25BC";
-  position: absolute;
-  text-align: center;
-}
-
-/* Style northward tooltips differently */
-.d3-tip.n:after {
-  margin: -1px 0 0 0;
-  top: 100%;
-  left: 0;
 }

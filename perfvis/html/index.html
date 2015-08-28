@@ -9,42 +9,48 @@
 <script src="./config.js" charset="utf-8"></script>
 <script src="./mm1.js" charset="utf-8"></script>
 <script src="./mm1k.js" charset="utf-8"></script>
+<script id="page-layout" src="./draftvis.js" charset="utf-8"></script>
 </head>
 <body>
 <h1>Ryu Performance Viewer</h1>
 
 <div id="side-bar">
-  <h2>Control Panel</h2>
-  <button id="editmode" >Edit mode</button>
-  <select id="node-select" class="panel">
-    <option value="default">Select Node</option>
-  </select>
-  <div id="specs" style='display:none'>
-    <h3>Switch Settings</h3>
-    <ul id="switch-settings">
-      <li>Brand:   
-        <select id='select-brand'>
-          <option val="openvswitch_vm">openvswitch_vm</option>
-          <option val="pica8">pica8</option>
-          <option val="user_defined">user_defined</option>
-        </select>
-      </li>
-      <li>Model:   
-        <select id='select-model'>
-          <option val="mm1_basic">mm1_basic</option>
-          <option val="mm1k_basik">mm1k_basic</option>
-        </select>
-      </li>
-    </ul>
-    <h3>Input</h3>
-    <ul id="switch-input">
-      <li>Arrival: <input id="arrival-rate" type="number" name="arrival" max="100000000" step="100"></li>
-      <li>Service: <input id="service-rate"type="number" name="service" max="100000000" step="100"></li>
-      <li>Queue capacity: <input id="queue-capacity"type="number" name="service" min="0" max="100000000"></li>
-    </ul>
+  <h2 id="loading">Loading..</h2>
+  <div id='control-panel' style="display:none">
+    <h2>Control Panel</h2>
+    <button id="editmode" >Edit mode</button>
+    <select id="node-select" class="panel">
+      <option value="default">Select Node</option>
+    </select>
+    <div id="specs" style='display:none'>
+      <h3>Switch Settings</h3>
+      <ul id="switch-settings">
+        <li>Brand:   
+          <select id='select-brand'>
+            <option val="openvswitch_vm">openvswitch_vm</option>
+            <option val="pica8">pica8</option>
+            <option val="user_defined">user_defined</option>
+          </select>
+        </li>
+        <li>Model:   
+          <select id='select-model'>
+            <option val="mm1_basic">mm1_basic</option>
+            <option val="mm1k_basik">mm1k_basic</option>
+          </select>
+        </li>
+      </ul>
+      <h3>Input</h3>
+      <ul id="switch-input">
+        <li>Arrival: <input id="arrival-rate" type="number" name="arrival" max="100000000" step="100"></li>
+        <li>Service: <input id="service-rate"type="number" name="service" max="100000000" step="100"></li>
+        <li>Queue capacity: <input id="queue-capacity"type="number" name="service" min="0" max="100000000"></li>
+      </ul>
+    </div>
   </div>
 </div>
-<script src="./draftvis.js" charset="utf-8"></script>
+<div id="in-graph">
+<svg class="chart"></svg>
+</div>
 <script src="./ryu.perfvis.js" charset="utf-8"></script>
 <script src="./ryu.performance.js" charset="utf-8"></script>
 </body>
