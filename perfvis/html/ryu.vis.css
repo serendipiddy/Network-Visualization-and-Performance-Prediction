@@ -84,27 +84,16 @@ body {
   margin:  0px;
 }
 
-.chart .legend {
-  fill: black;
-  font: 14px sans-serif;
-  text-anchor: start;
-  font-size: 12px;
-}
-
-.chart text {
-  fill: white;
-  font: 10px sans-serif;
-  text-anchor: end;
-}
-
-.chart .label {
-  fill: black;
-  font: 14px sans-serif;
-  text-anchor: end;
+.bar {
+  fill: steelblue;
 }
 
 .bar:hover {
   fill: brown;
+}
+
+.axis {
+  font: 10px sans-serif;
 }
 
 .axis path,
@@ -113,3 +102,6 @@ body {
   stroke: #000;
   shape-rendering: crispEdges;
 }
+
+.x.axis path {
+  

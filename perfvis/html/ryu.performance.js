@@ -286,7 +286,7 @@ var model = {
       var model = pf_data.node_data[dpid].queueing_model;
       if (config.queueing_models[model]) {
           // console.log('Running '+model+' model on \''+dpid+'\' brand');
-          return this.output(model,pf_data.get_model_input_dpid(dpid));
+          return this.compute(model,pf_data.get_model_input_dpid(dpid));
         } else console.log('not a valid brand');
     },
     get_output_all: function() {
@@ -296,7 +296,7 @@ var model = {
       }
       return all_data;
     },
-    output: function(model_name, input) {
+    compute: function(model_name, input) {
       var model_config = config.queueing_models[model_name];
       var model = config.get_model[model_name];
       
@@ -325,27 +325,112 @@ var model = {
     }
 }
 
+/* Graphing currently connects to the GUI vis file */
+var graphing = {
+  graphs: [],
+  pf_labels: [],
+  model_labels: [],
+  create_graphs: function(pf_labels,model_labels){
+    this.graphs = [];
+    this.pf_labels = [];
+    this.model_labels = [];
+    for (var l = 0; l<pf_labels.length; l++) {
+      this.graphs.push(get_graph(pf_labels[l]));
+      this.pf_labels.push(pf_labels[l]);
+    }
+    for (var l = 0; l<model_labels.length; l++) {
+      this.graphs.push(get_graph(model_labels[l]));
+      this.model_labels.push(model_labels[l]);
+    }
+  },
+  get_graph_data: function (pf_out, model_data) {
+    /* for each input/output display a graph grouping like-puts */
+    
+    /* parameter structure
+    // var pf_labels = ['service_rate', 'arrival_rate', 'queue_capacity'];
+    // var model_labels = ['load','sojourn'];
+    
+    console.log(JSON.stringify(pf_out));
+    console.log(JSON.stringify(model_data));
+    {
+      "0000000000000001":{"service_rate":56625,"arrival_rate":13041,"queue_capacity":0},
+      "0000000000000002":{"service_rate":56625,"arrival_rate":15577,"queue_capacity":0}
+    }
+    {
+      "0000000000000001":{"load":0.2303046357615894,"length":0.29921530837004406,"sojourn":0.000022944199706314243},
+      "0000000000000002":{"load":0.2750905077262693,"length":0.37948255700643146,"sojourn":0.000024361722861040732}
+    }
+    */
+    
+    /* Construct zipGraphData() input */
+    var graph_data = {
+      y_labels: [],
+      editable: [],
+      dpids: [],
+      series: {}
+    };
+    
+    for (var i = 0; i< this.pf_labels.length; i++)  {
+      graph_data.y_labels.push(this.pf_labels[i]);
+      graph_data.editable.push(true);
+      graph_data.series[this.pf_labels[i]] = [];
+    }
+    for (var i = 0; i< this.model_labels.length; i++) {
+      graph_data.y_labels.push(this.model_labels[i]);
+      graph_data.editable.push(false);
+      graph_data.series[this.model_labels[i]] = [];
+    }
+    
+    for (dpid in pf_out) {
+      graph_data.dpids.push(dpid);
+      for (var i = 0; i< this.pf_labels.length; i++) {
+        var lab = this.pf_labels[i];
+        graph_data.series[lab]
+          .push(pf_out[dpid][lab]);
+      }
+      for (var i = 0; i< this.model_labels.length; i++) {
+        var lab = this.model_labels[i];
+        graph_data.series[lab]
+          .push(model_data[dpid][lab]);
+      }
+    }
+    
+    // console.log(JSON.stringify(graph_data,null,2));
+    
+    return zipGraphData(graph_data);
+  },
+  update_graphs: function (pf_out, model_data) {
+    var data = this.get_graph_data(pf_out, model_data);
+    for(var i = 0; i<this.graphs.length; i++) {
+      update_graph(this.graphs[i],data[i].data);
+    }
+  },
+}
+
+/* Select the data to graph */
+graphing.create_graphs(['service_rate', 'arrival_rate', 'queue_capacity'],['load','sojourn']);
+
 var update_gui = function () { /* Updates the displayed performance values */
-    var data_in = pf_data.get_model_input_all();
-    var data_out = model.get_output_all();
+    var in_data  = pf_data.get_model_input_all();
+    var model_data = model.get_output_all();
+    
+    update_gui_text(in_data,model_data);
+    graphing.update_graphs(in_data,model_data);
+}
+
+var update_gui_text = function (in_data, out_data) {
     elem.stats.selectAll(".dpid").text(  function(d) {
             return "dpid:    "+dpid_to_int(d.dpid); });
     elem.stats.selectAll(".lambda").text(  function(d) { 
-            return LAM+":    "+data_in[d.dpid].arrival_rate.toFixed(2); });
+            return LAM+":    "+in_data[d.dpid].arrival_rate.toFixed(2); });
     elem.stats.selectAll(".mu").text(  function(d) { 
-            return MU+":     "+data_in[d.dpid].service_rate.toFixed(2); });
+            return MU+":     "+in_data[d.dpid].service_rate.toFixed(2); });
     elem.stats.selectAll(".sojourn").text(  function(d) { 
-            return "sojourn: "+data_out[d.dpid].sojourn.toFixed(4); });
+            return "sojourn: "+out_data[d.dpid].sojourn.toFixed(4); });
     elem.stats.selectAll(".load").text(  function(d) { 
-            return "load:    "+data_out[d.dpid].load.toFixed(4); });
+            return "load:    "+out_data[d.dpid].load.toFixed(4); });
     elem.stats.selectAll(".bufflen").text(  function(d) { 
-            return "length:  "+data_out[d.dpid].length.toFixed(4); });
-    // setGraphData();
-    // drawGraph();
-}
-
-var display_graph = {
-  /* for each input/output display a graph grouping like-puts */
+            return "length:  "+out_data[d.dpid].length.toFixed(4); });
 }
 
 /* Samples for testing offline */
@@ -410,5 +495,5 @@ function init_local() {
 }
 
 
-init_local(); // for offline testing
-// main();    // for server
+// init_local(); // for offline testing
+main();    // for server

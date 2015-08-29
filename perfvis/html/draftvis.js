@@ -77,67 +77,141 @@ $(document).ready(function() {
     $('#specs').show();
   });
   setControlPanelListeners();
-  arrival_graph = d3.select("body").append("div")
-          .attr("id", "graphs")
-          .attr("width", CONF.force.width)
-  // drawGraph();
 });
 
-var arrival_graph = "";
+var graphs = {};
+graphs.margin = {top: 20, right: 20, bottom: 30, left: 40};
+graphs.width   = 300 - graphs.margin.left - graphs.margin.right;
+graphs.height  = 250 - graphs.margin.top - graphs.margin.bottom;
+
+var get_graph = function(yLabel) {
+  var x = d3.scale.ordinal().rangeRoundBands([0, graphs.width], .1);
+  var y = d3.scale.linear().range([graphs.height, 0]);
+  var xAxis = d3.svg.axis().scale(x).orient("bottom");
+  var yAxis = d3.svg.axis().scale(y).orient("left").ticks(10,"/s");
+  
+  var svg = d3.select('#graph-panel').append('svg')
+      .attr('width', graphs.width + graphs.margin.left + graphs.margin.right)
+      .attr('width', graphs.height + graphs.margin.top + graphs.margin.bottom)
+    .append('g')
+      .attr('tansform','translate('+graphs.margin+','+graphs.margin+')');
+      
+  svg.append('g')
+      .attr('class','x-axis')
+      .attr('transform','translate(0,'+graphs.height+')')
+      .call(xAxis);
+      
+  svg.append('g')
+      .attr('class', 'y-axis')
+      .call(yAxis)
+    .append('text')
+      .attr('transform','rotate(-90)')
+      .attr('y',0) // distance of rotated label from axis
+      .attr('dy', '.71em') // similar to previous..? fine tuning?
+      .style('text-anchor', 'end') // places at end of axis, rather than ages away
+      .text(yLabel);
+      
+  console.log('svg: '+svg+' \nx: '+x+' \ny: '+y); // the graph
+  return {'svg':svg,'x':x,'y':y}; // the graph
+};
+
+// data: [{dpid:, value:}]
+var update_graph = function(graph, data) {
+  graph.x.domain(data.map(function(d) { return d.dpid; }));
+  graph.y.domain([0, d3.max(data, function(d) { return d.value; })]);
+  
+  var chart = graph.svg.selectAll('.bar')
+      .data(data); // JOIN
+  
+  chart.enter().append('rect') // ENTER
+      .attr('class', 'bar')
+      .attr('width', graph.x.rangeBand());
+      
+  chart.attr('y', function(d) {
+    return graph.y(d.value); }) // ENTER + UPDATE
+      .attr('height', function(d) {return graphs.height - graph.y(d.value)})
+      .attr('x', function(d) {return graph.x(d.dpid); });
+  
+  chart.exit().remove(); // EXIT
+}
+
+var zipGraphData = function(g_in) { // zips up data, returning an object for each graph
+  /*  getGraphData_input = {
+        y_labels : ['label_a','label_b'],
+        editable : [true,false],
+        dpids  : [''],
+        series : {
+          // How to include the altered input? Should create a stacked graph first
+          // label_a = [value: alt_value:,] ?
+          label_a = [value:,],
+          label_b = [value:,],
+          ...
+        },
+      }
+  */
+  
+  var zipped = [];
+  var series = [];
+  for (var l = 0; l<g_in.y_labels.length; l++) {
+    series[l] = [];
+  }
+  for (var dp = 0; dp<g_in.dpids.length ; dp++) {
+    for (var l = 0; l<g_in.y_labels.length; l++) {
+      series[l].push({
+        dpid: g_in.dpids[dp],
+        value: g_in.series[g_in.y_labels[l]][dp],
+      });
+    }
+  }
+  for (var l = 0; l<g_in.y_labels.length; l++) {
+    zipped.push ({
+      label: g_in.y_labels[l],
+      data: series[l],
+      editable: g_in.editable[l],
+    });
+  }
+  return zipped;
+}
+
+
+
 
 var graph_panel = {
   width: 300
 }
 
-var model_in = {
-  labels: [
-    'service_rate', 'arrival_rate', 'queue_capacity'
-  ],
-  series: [
-  { 'label': '0000000000000001',
-    'values': [56625,20000,0]
-  },
-  { 'label': '0000000000000002',
-    'values': [56625, 28000, 0]
-  },
-  { 'label': '0000000000000003',
-    'values': [56625, 11000, 0]
-  },
-  { 'label': '0000000000000004',
-    'values': [56625, 10000, 0]
-  },
-  { 'label': '0000000000000005',
-    'values': [56625, 30000, 0]
-  },
-  { 'label': '0000000000000006',
-    'values': [56625, 18000, 0]
-  },
-  { 'label': '0000000000000007',
-    'values': [56625, 15000, 0]
-  }
-  ]
+var graph_in = {
+  labels: [ 'service_rate', 'arrival_rate', 'load' ],
+  series_arrival: [
+    {'dpid': '0000000000000001','value':20000},
+    {'dpid': '0000000000000002','value':28000},
+    {'dpid': '0000000000000003','value':11000},
+    {'dpid': '0000000000000004','value':10000},
+    {'dpid': '0000000000000005','value':30000},
+    {'dpid': '0000000000000006','value':18000},
+    {'dpid': '0000000000000007','value':15000}],
+  series_service: [
+    {'dpid': '0000000000000001','value':56625},
+    {'dpid': '0000000000000002','value':56625},
+    {'dpid': '0000000000000003','value':56625},
+    {'dpid': '0000000000000004','value':56625},
+    {'dpid': '0000000000000005','value':56625},
+    {'dpid': '0000000000000006','value':56625},
+    {'dpid': '0000000000000007','value':56625}],
+  series_load: []
 }
 
-var setGraphData = function() {
-  model_in.labels = [
-    'arrival-rate',
-    'service-rate'
-  ];
-  model_in_data = pf_data.get_model_input_all();
-  var series = [];
-  for (dpid in model_in_data) {
-    series.push({
-      label: dpid,
-      values: [
-        model_in_data[dpid].arrival_rate,
-        model_in_data[dpid].service_rate
-      ]
-    });
-  }
-  model_in.series = series;
+for (var i = 0; i < graph_in.series_service.length; i++) {
+  graph_in.series_load.push({
+    'dpid':  graph_in.series_service[i].dpid,
+    'value': graph_in.series_arrival[i].value/graph_in.series_service[i].value
+  });
 }
 
-var drawGraph = function() {
+
+
+
+/* var drawGraph = function() { // previous attempt
   var chartWidth       = 300,
       barHeight        = 20,
       groupHeight      = barHeight * model_in.series.length,
@@ -242,4 +316,5 @@ var drawGraph = function() {
       .attr('x', legendRectSize + legendSpacing)
       .attr('y', legendRectSize - legendSpacing)
       .text(function (d) { return d.label; });
-}
+}*/
+
