@@ -5,7 +5,7 @@ var CONF = {
     },
     force: {
         // width: 700,
-        width: $(window).width()-250-graph_panel.width,
+        width: $(window).width()-250-graphs.w_border, // 250 is for control panel and scroll bar
         height: 500,
         dist: 200,
         charge: -600
@@ -288,7 +288,7 @@ var topo = {
         for (var i = 0; i < this.links.length; i++) {
             function _push(p, dir) {
                 key = p.dpid + ":" + p.port_no;
-                if (key in pushed) {
+                if (pushed.hasOwnProperty(key)) {
                     return 0;
                 }
 

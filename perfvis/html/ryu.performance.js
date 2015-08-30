@@ -45,7 +45,7 @@ ws.onmessage = function(event) {
 }
 
 var dpid_exists = function(dpid) {
-  if (!(pf_data.node_data[dpid])) {
+  if (!(pf_data.node_data.hasOwnProperty(dpid))) {
     console.log("unknown dpid: "+dpid);
     return false;
   }
@@ -269,6 +269,23 @@ var pf_data = {
       }
       return {};
     },
+    get_gui_input_all: function() {
+      var all_data = {};
+      for(dpid in this.node_data) {
+        if (dpid_exists) {
+          var ret = {
+            'service_rate': {'live':this.node_data[dpid].service_rate,'adjustment':this.node_data[dpid].adjustments.service_rate},
+            'arrival_rate': {'live':this.live_data[dpid].aggregate.arrival_rate, 'adjustment':this.node_data[dpid].adjustments.arrival_rate},
+            'queue_capacity': {'live':this.node_data[dpid].queue_capacity, 'adjustment': this.node_data[dpid].adjustments.queue_capacity}
+          }
+          /* make sure alterations don't go below 0 */
+          for(a in ret) {
+            if ((ret[a].live + ret[a].adjustment) < 0) ret[a].adjustment = 0-ret[a].live;}
+          all_data[dpid] = ret;
+        }
+      }
+      return all_data;
+    },
     get_model_input_all: function() {
       var all_data = {};
       for(dpid in this.node_data) {
@@ -304,7 +321,7 @@ var model = {
       /* Check input data */
       for (var i = 0; i < model_config.model_in.length; i++) {
           val = model_config.model_in[i];
-          if (!val in input) {
+          if (!input.hasOwnProperty(val)) {
             console.log('Model required input \''+val+'\' not found');
             return;
           }
@@ -411,26 +428,11 @@ var graphing = {
 graphing.create_graphs(['service_rate', 'arrival_rate', 'queue_capacity'],['load','sojourn']);
 
 var update_gui = function () { /* Updates the displayed performance values */
-    var in_data  = pf_data.get_model_input_all();
+    var in_data  = pf_data.get_gui_input_all();
     var model_data = model.get_output_all();
     
     update_gui_text(in_data,model_data);
     graphing.update_graphs(in_data,model_data);
-}
-
-var update_gui_text = function (in_data, out_data) {
-    elem.stats.selectAll(".dpid").text(  function(d) {
-            return "dpid:    "+dpid_to_int(d.dpid); });
-    elem.stats.selectAll(".lambda").text(  function(d) { 
-            return LAM+":    "+in_data[d.dpid].arrival_rate.toFixed(2); });
-    elem.stats.selectAll(".mu").text(  function(d) { 
-            return MU+":     "+in_data[d.dpid].service_rate.toFixed(2); });
-    elem.stats.selectAll(".sojourn").text(  function(d) { 
-            return "sojourn: "+out_data[d.dpid].sojourn.toFixed(4); });
-    elem.stats.selectAll(".load").text(  function(d) { 
-            return "load:    "+out_data[d.dpid].load.toFixed(4); });
-    elem.stats.selectAll(".bufflen").text(  function(d) { 
-            return "length:  "+out_data[d.dpid].length.toFixed(4); });
 }
 
 /* Samples for testing offline */
@@ -495,5 +497,5 @@ function init_local() {
 }
 
 
-// init_local(); // for offline testing
-main();    // for server
+init_local(); // for offline testing
+// main();    // for server

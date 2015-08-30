@@ -37,7 +37,7 @@ var config = {
   'config_keys': ['switch_brand', 'queueing_model', 'service_rate', 'pnf', 'queue_capacity'],
   'adjustment_keys': ['service_rate','arrival_rate','pnf','queue_capacity'],
 }
-
+/* In ryu.performance.js.model now */
 // var output = function(model_name, input) {
     // var model_config = config.queueing_models[model_name];
     // var model = config.get_model[model_name];

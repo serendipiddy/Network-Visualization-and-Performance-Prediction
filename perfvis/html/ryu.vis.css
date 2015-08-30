@@ -88,6 +88,18 @@ body {
   fill: steelblue;
 }
 
+.live {
+  fill: steelblue;
+}
+
+.adj {
+  fill: YellowGreen;
+}
+
+.adj-neg {
+  fill: OrangeRed;
+}
+
 .bar:hover {
   fill: brown;
 }

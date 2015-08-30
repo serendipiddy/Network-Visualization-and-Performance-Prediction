@@ -79,8 +79,27 @@ $(document).ready(function() {
   setControlPanelListeners();
 });
 
+var update_gui_text = function (in_data, out_data) {
+    elem.stats.selectAll(".dpid").text(  function(d) {
+            return "dpid:    "+dpid_to_int(d.dpid); });
+    elem.stats.selectAll(".lambda").text(  function(d) { 
+            var o = in_data[d.dpid].arrival_rate;
+            return LAM+":    "+(o.live+o.adjustment).toFixed(2); });
+    elem.stats.selectAll(".mu").text(  function(d) { 
+            var o = in_data[d.dpid].service_rate;
+            return MU+":     "+(o.live+o.adjustment).toFixed(2); });
+    elem.stats.selectAll(".sojourn").text(  function(d) { 
+            return "sojourn: "+out_data[d.dpid].sojourn.toFixed(4); });
+    elem.stats.selectAll(".load").text(  function(d) { 
+            return "load:    "+out_data[d.dpid].load.toFixed(4); });
+    elem.stats.selectAll(".bufflen").text(  function(d) { 
+            return "length:  "+out_data[d.dpid].length.toFixed(4); });
+}
+
 var graphs = {};
-graphs.margin = {top: 20, right: 20, bottom: 30, left: 40};
+graphs.w_border  = 300;
+graphs.h_border  = 250;
+graphs.margin  = {top: 20, right: 20, bottom: 30, left: 40};
 graphs.width   = 300 - graphs.margin.left - graphs.margin.right;
 graphs.height  = 250 - graphs.margin.top - graphs.margin.bottom;
 
@@ -88,7 +107,7 @@ var get_graph = function(yLabel) {
   var x = d3.scale.ordinal().rangeRoundBands([0, graphs.width], .1);
   var y = d3.scale.linear().range([graphs.height, 0]);
   var xAxis = d3.svg.axis().scale(x).orient("bottom");
-  var yAxis = d3.svg.axis().scale(y).orient("left").ticks(10,"/s");
+  var yAxis = d3.svg.axis().scale(y).orient("left").ticks(10);
   
   var svg = d3.select('#graph-panel').append('svg')
       .attr('width', graphs.width + graphs.margin.left + graphs.margin.right)
@@ -111,28 +130,75 @@ var get_graph = function(yLabel) {
       .style('text-anchor', 'end') // places at end of axis, rather than ages away
       .text(yLabel);
       
-  console.log('svg: '+svg+' \nx: '+x+' \ny: '+y); // the graph
-  return {'svg':svg,'x':x,'y':y}; // the graph
+  return {'svg':svg,'x':x,'y':y,'label':yLabel}; // the graph
 };
 
-// data: [{dpid:, value:}]
+// data: [{dpid:, value:{live:, adjustment:}] // TODO include and show adjustment
 var update_graph = function(graph, data) {
-  graph.x.domain(data.map(function(d) { return d.dpid; }));
-  graph.y.domain([0, d3.max(data, function(d) { return d.value; })]);
+  /* Allows two forms of data to exist, 'value' and {live,adjustment} */
   
-  var chart = graph.svg.selectAll('.bar')
+  // console.log(graph.label+" "+JSON.stringify(data,null,2));
+  
+  var get_live = function(o) {
+    if (o.value.hasOwnProperty('adjustment')) {
+      return o.value.live;
+    }
+    else return o.value;
+  }
+  var get_adj_y = function(o) { // max{ (y + adj), y }
+    if (o.value.hasOwnProperty('adjustment')) {
+      var al = o.value.live + o.value.adjustment;
+      if (al < o.value.live) return o.value.live;
+      return al;
+    }
+    else return 0;
+  }
+  var get_adj_height = function(o) {
+    if (!o.value.hasOwnProperty('adjustment'))  return 0;
+    
+    var live = get_live(o);
+    var adj = get_adj_y(o);
+    
+    // console.log("live("+live+") === adj("+adj+"), return 0"); // no adjustment, adjustment == 0
+    
+    if (live == adj) return 0; // no adjustment, adjustment == 0
+    
+    return o.value.adjustment;
+  }
+  
+  graph.x.domain(data.map(function(d) { return d.dpid; }));
+  // graph.y.domain([-1, d3.max(data, function(d) { return (get_live(d)+1)*1.2; })]); /* TODO better upper limit */
+  graph.y.domain([0, d3.max(data, function(d) { return get_live(d); })]);
+  
+  /* Live and model data */
+  var chart = graph.svg.selectAll('.live')
       .data(data); // JOIN
   
   chart.enter().append('rect') // ENTER
-      .attr('class', 'bar')
+      .attr('class', 'bar live')
       .attr('width', graph.x.rangeBand());
       
-  chart.attr('y', function(d) {
-    return graph.y(d.value); }) // ENTER + UPDATE
-      .attr('height', function(d) {return graphs.height - graph.y(d.value)})
+  chart.attr('y', function(d) {return graph.y(get_live(d)); }) // ENTER + UPDATE
+      .attr('height', function(d) {return graphs.height - graph.y(get_live(d))})
       .attr('x', function(d) {return graph.x(d.dpid); });
   
   chart.exit().remove(); // EXIT
+  
+  /* Adjusted data */
+  var adj = graph.svg.selectAll('.adj')
+      .data(data); // JOIN
+  
+  adj.enter().append('rect') // ENTER
+      .attr('class', 'bar adj')
+      .attr('width', graph.x.rangeBand());
+      
+  adj.attr('y', function(d) {return graph.y(get_adj_y(d)); }) // ENTER + UPDATE
+      .attr('height', function(d) {
+          console.log(graphs.height+" - graph.y("+get_adj_height(d)+")");
+          return (graphs.height - graph.y(get_adj_height(d))); })
+      .attr('x', function(d) {return graph.x(d.dpid); });
+  
+  adj.exit().remove(); // EXIT
 }
 
 var zipGraphData = function(g_in) { // zips up data, returning an object for each graph
@@ -149,6 +215,8 @@ var zipGraphData = function(g_in) { // zips up data, returning an object for eac
         },
       }
   */
+  
+  // console.log(JSON.stringify(g_in,null,2));
   
   var zipped = [];
   var series = [];
@@ -173,148 +241,5 @@ var zipGraphData = function(g_in) { // zips up data, returning an object for eac
   return zipped;
 }
 
-
-
-
-var graph_panel = {
-  width: 300
-}
-
-var graph_in = {
-  labels: [ 'service_rate', 'arrival_rate', 'load' ],
-  series_arrival: [
-    {'dpid': '0000000000000001','value':20000},
-    {'dpid': '0000000000000002','value':28000},
-    {'dpid': '0000000000000003','value':11000},
-    {'dpid': '0000000000000004','value':10000},
-    {'dpid': '0000000000000005','value':30000},
-    {'dpid': '0000000000000006','value':18000},
-    {'dpid': '0000000000000007','value':15000}],
-  series_service: [
-    {'dpid': '0000000000000001','value':56625},
-    {'dpid': '0000000000000002','value':56625},
-    {'dpid': '0000000000000003','value':56625},
-    {'dpid': '0000000000000004','value':56625},
-    {'dpid': '0000000000000005','value':56625},
-    {'dpid': '0000000000000006','value':56625},
-    {'dpid': '0000000000000007','value':56625}],
-  series_load: []
-}
-
-for (var i = 0; i < graph_in.series_service.length; i++) {
-  graph_in.series_load.push({
-    'dpid':  graph_in.series_service[i].dpid,
-    'value': graph_in.series_arrival[i].value/graph_in.series_service[i].value
-  });
-}
-
-
-
-
-/* var drawGraph = function() { // previous attempt
-  var chartWidth       = 300,
-      barHeight        = 20,
-      groupHeight      = barHeight * model_in.series.length,
-      gapBetweenGroups = 10,
-      spaceForLabels   = 200,
-      spaceForLegend   = 200;
-
-  // Zip the series data together (first values, second values, etc.)
-  var zippedData = [];
-  for (var i=0; i<model_in.labels.length; i++) {
-    for (var j=0; j<model_in.series.length; j++) {
-      zippedData.push(model_in.series[j].values[i]);
-    }
-  }
-
-  // Color scale
-  var color = d3.scale.category20();
-  var chartHeight = barHeight * zippedData.length + gapBetweenGroups * model_in.labels.length;
-
-  var x = d3.scale.linear()
-      .domain([0, d3.max(zippedData)])
-      .range([0, chartWidth]);
-
-  var y = d3.scale.log()
-      .range([chartHeight + gapBetweenGroups, 0]);
-
-  var yAxis = d3.svg.axis()
-      .scale(y)
-      .tickFormat('')
-      .tickSize(0)
-      .orient("left");
-
-  // Specify the chart area and dimensions
-  var chart = d3.select(".chart")
-      .attr("width", spaceForLabels + chartWidth + spaceForLegend)
-      .attr("height", chartHeight);
-
-  // Create bars
-  var bar = chart.selectAll("g")
-      .data(zippedData)
-      .enter().append("g")
-      .attr("transform", function(d, i) {
-        return "translate(" + spaceForLabels + "," + (i * barHeight + gapBetweenGroups * (0.5 + Math.floor(i/model_in.series.length))) + ")";
-      });
-
-  // Create rectangles of the correct width
-  bar.append("rect")
-      .attr("fill", function(d,i) { return color(i % model_in.series.length); })
-      .attr("class", "bar")
-      .attr("width", x)
-      .attr("height", barHeight - 1);
-
-  // Add text label in bar
-  bar.append("text")
-      .attr("x", function(d) { return x(d) - 3; })
-      .attr("y", barHeight / 2)
-      .attr("fill", "red")
-      .attr("dy", ".35em")
-      .text(function(d) { return d; });
-
-  // Draw labels
-  bar.append("text")
-      .attr("class", "label")
-      .attr("x", function(d) { return - 10; })
-      .attr("y", groupHeight / 2)
-      .attr("dy", ".35em")
-      .text(function(d,i) {
-        if (i % model_in.series.length === 0)
-          return model_in.labels[Math.floor(i/model_in.series.length)];
-        else
-          return ""});
-
-  chart.append("g")
-        .attr("class", "y axis")
-        .attr("transform", "translate(" + spaceForLabels + ", " + -gapBetweenGroups/2 + ")")
-        .call(yAxis);
-
-  // Draw legend
-  var legendRectSize = 18,
-      legendSpacing  = 4;
-
-  var legend = chart.selectAll('.legend')
-      .data(model_in.series)
-      .enter()
-      .append('g')
-      .attr('transform', function (d, i) {
-          var height = legendRectSize + legendSpacing;
-          var offset = -gapBetweenGroups/2;
-          var horz = spaceForLabels + chartWidth + 40 - legendRectSize;
-          var vert = i * height - offset;
-          return 'translate(' + horz + ',' + vert + ')';
-      });
-
-  legend.append('rect')
-      .attr('width', legendRectSize)
-      .attr('height', legendRectSize)
-      .style('fill', function (d, i) { return color(i); })
-      .style('stroke', function (d, i) { return color(i); });
-
-  legend.append('text')
-      .attr('class', 'legend')
-      .attr('x', legendRectSize + legendSpacing)
-      .attr('y', legendRectSize - legendSpacing)
-      .text(function (d) { return d.label; });
-}*/
-
+// bar chart: http://bl.ocks.org/mbostock/3885304
+// dynamic update pattern: http://bl.ocks.org/mbostock/3808218
