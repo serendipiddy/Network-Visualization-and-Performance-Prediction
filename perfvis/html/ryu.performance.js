@@ -426,6 +426,7 @@ var graphing = {
 
 /* Select the data to graph */
 graphing.create_graphs(['service_rate', 'arrival_rate', 'queue_capacity'],['load','sojourn']);
+// graphing.create_graphs(['arrival_rate'],[]);
 
 var update_gui = function () { /* Updates the displayed performance values */
     var in_data  = pf_data.get_gui_input_all();
@@ -439,12 +440,12 @@ var update_gui = function () { /* Updates the displayed performance values */
 var sample = {
   data: {
     "0000000000000001": [
-      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
-      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
+      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.1, "depart_rate": 101.1, "total_rx": 100, "total_rx": 100},
+      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.2, "depart_rate": 101.2, "total_rx": 100, "total_rx": 100},
     ],
     "0000000000000002": [
-      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
-      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.0, "depart_rate": 100.0, "total_rx": 100, "total_rx": 100},
+      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.1, "depart_rate": 201.1, "total_rx": 100, "total_rx": 100},
+      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_rx": 100, "total_rx": 100},
     ]
   },
   switches: [
@@ -493,9 +494,9 @@ function init_local() {
       $('#control-panel').show();
       update_gui();
       
-    }, 1000);
+    }, 2000);
 }
 
 
-init_local(); // for offline testing
-// main();    // for server
+// init_local(); // for offline testing
+main();    // for server

@@ -84,6 +84,11 @@ body {
   margin:  0px;
 }
 
+.graph {
+  /* height: 250; */
+  width: 300px;
+}
+
 .bar {
   fill: steelblue;
 }
@@ -92,12 +97,8 @@ body {
   fill: steelblue;
 }
 
-.adj {
-  fill: YellowGreen;
-}
-
-.adj-neg {
-  fill: OrangeRed;
+.bar-adj {
+  fill: YellowGreen; /* OrangeRed */
 }
 
 .bar:hover {
