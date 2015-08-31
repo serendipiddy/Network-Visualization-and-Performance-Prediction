@@ -1,7 +1,9 @@
 #Service Rate Experiment
 
 ## Aim
-To measure the average service rate of a switch for use in queueing models describing behaviour of OpenFlow switches.
+To measure the average service rate of a switch for use in queueing models describing behaviour of OpenFlow switches. 
+
+The service rate is determined by the service time, which is measured as the difference between the time a packet enters service (t1) and the time the same packet completes service (t2), or (service time) = (t2-t2)
 
 ## Requirements
 To run this experiment certain 
@@ -14,6 +16,16 @@ This experiment details the case where the switch is an [OpenVSwitch](http://ope
 ## Method
 ### Setting up
 The switch and hosts must be set up so that traffic sent can be immediately transmitted and not interrupted by ARP table timeouts. To maintain traffic in a single direction, all traffic at the sink is dropped. To avoid controller query interruptions, static flows must be installed also.
+
+The topology is as below: 
+```
+============       ============       ============
++          +       +          +       +          +
++  source  O=======O  switch  O=======O   sink   +
++   host   +       +          +       +   host   +
++          +       +          +       +          +
+============       ============       ============
+```
 
 The source host must establish a static ARP rule for the sink:
 ```
@@ -80,5 +92,6 @@ While the nature of a TCP flow is one of responses, the aim is of this experimen
 ### Hardware-based version
 For the measurement of a hardware switch, a similar setup can be used. The ideal case is for the source, sink, switch and measuring device to be different. However several options are available.
 
-* 
+* Placing a tap on the link between the source host and the switch and the link between the switch and the sink host. These taps forward packets to a separate device where TCPdump is run and results collected. This is the ideal case.
+* Using only the source, sink and switch, run TCPdump on the source and sink hosts. This would require time synchronisation between the hosts and relies on the assumption that the time of departure from the source host is the same as the arrival at the switch, similarly assumes the departure time at the switch is the same as the arrival time at the sink host.
 * The same as the VM experiment. If the switch OS is linux based, running TCPdump on the switch to monitor the network interfaces directly. However this may introduce unwanted overhead and is not recommended.
