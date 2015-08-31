@@ -46,4 +46,3 @@ sudo ../tcpd -i s1-eth2 --time-stamp-precision=nano > ~/s1-eth2.svc.dump &
 
 == Hardware-based version ==
 * placement of port probe
-
