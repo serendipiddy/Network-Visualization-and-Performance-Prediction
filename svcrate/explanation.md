@@ -3,7 +3,7 @@
 ## Aim
 To measure the average service rate of a switch for use in queueing models describing behaviour of OpenFlow switches. 
 
-The service rate is determined by the service time, which is measured as the difference between the time a packet enters service (t1) and the time the same packet completes service (t2), or `(service time) = (t2-t1)`.
+The service rate is determined by the service time, which is measured as the difference between the time a packet enters service (t1) and the time the same packet completes service (t2), or `service_time = t2-t1`.
 
 ## Requirements
 To run this experiment certain 
