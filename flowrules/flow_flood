@@ -1,3 +1,0 @@
-in_port=1 action=output:FLOOD
-in_port=2 action=output:FLOOD
-in_port=3 action=output:FLOOD
