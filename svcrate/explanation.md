@@ -11,7 +11,7 @@ To run this experiment certain
 * Two Ethernet network hosts, source and sink
 * Ability to install flows on switch and sudo access to hosts.
 
-This experiment details the case where the switch is an [OpenVSwitch](http://openvswitch.org) emulated device within a (mininet)[http://mininet.org] virtual machine.
+This experiment details the case where the switch is an [OpenVSwitch](http://openvswitch.org) emulated device within a [mininet](http://mininet.org) virtual machine.
 
 ## Method
 ### Setting up
