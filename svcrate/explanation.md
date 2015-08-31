@@ -1,9 +1,9 @@
-=Service Rate Experiment=
+#Service Rate Experiment
 
-== Aim ==
+## Aim
 To ascertain the average service rate of a switch for use in queueing models describing behaviour of OpenFlow switches.
 
-== Requirements ==
+## Requirements
 To run this experiment certain 
 * The OpenFlow switch to be measured
 * Two Ethernet network hosts, source and sink
@@ -11,7 +11,7 @@ To run this experiment certain
 
 This experiment details the case where the switch is an OpenVSwitch emulated device within a VM.
 
-== Setting up ==
+## Setting up
 The hosts must be set up so that traffic sent can be immediately transmitted and not interrupted by ARP table timeouts. To maintain traffic in a single direction, all traffic at the sink is dropped.
 
 The source host must establish a static ARP rule for the sink:
@@ -30,19 +30,19 @@ Finally, a TCPdump session must be started for the ingress and egress ports on t
 sudo ../tcpd -i s1-eth1 --time-stamp-precision=nano > ~/s1-eth1.svc.dump &
 sudo ../tcpd -i s1-eth2 --time-stamp-precision=nano > ~/s1-eth2.svc.dump &
 
-== Running the experiment ==
+## Running the experiment
 * sending rate, so only one is in the switch at a time
 * 2 million packets
 * range of packet sizes
 * breaking up packet sizes with other traffic
 
-== Results ==
+## Results
 * The dumps from each, finding the difference
 * Quick (python? script to do that, assuming no packets were dropped at either interface.
 
-== Discussion ==
-=== Limitations ===
+## Discussion
+### Limitations
 * precision, importance?
 
-== Hardware-based version ==
+## Hardware-based version
 * placement of port probe
