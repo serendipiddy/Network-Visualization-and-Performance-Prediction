@@ -498,5 +498,5 @@ function init_local() {
 }
 
 
-// init_local(); // for offline testing
-main();    // for server
+init_local(); // for offline testing
+// main();    // for server

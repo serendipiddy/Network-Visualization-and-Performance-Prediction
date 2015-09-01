@@ -19,12 +19,12 @@ The switch and hosts must be set up so that traffic sent can be immediately tran
 
 The topology is as below: 
 ```
-============       ============       ============
-+          +       +          +       +          +
+============          ======          ============
++          +        /        \        +          +
 +  source  O=======O  switch  O=======O   sink   +
-+   host   +       +          +       +   host   +
-+          +       +          +       +          +
-============       ============       ============
++   host   +       |          |       +   host   +
++          +        \        /        +          +
+============          ======          ============
 ```
 
 The source host must establish a static ARP rule for the sink:
@@ -47,22 +47,23 @@ Assuming the source host is attached to port 1 and sink on port 2, and the switc
 
 Finally, a TCPdump session must be started for the ingress and egress interfaces on the switch.
 ```
-$ sudo tcpdump -i s1-eth1 --time-stamp-precision=nano > ~/s1-eth1.svc.dump &
-$ sudo tcpdump -i s1-eth2 --time-stamp-precision=nano > ~/s1-eth2.svc.dump &
+$ sudo tcpdump -i s1-eth1 --time-stamp-precision=nano -nn > ~/s1-eth1.svc.dump &
+$ sudo tcpdump -i s1-eth2 --time-stamp-precision=nano -nn > ~/s1-eth2.svc.dump &
 ```
 ### Running the experiment
 Nping, from [nmap](http://nmap.org/nping/), is used to generate traffic from source to sink. It is run on the source host for a range of packet payloads.
 Example:
 ```
-$ nping 10.0.0.2 --tcp --rate 100 --data-length 10 -c2000000 -NH
+$ nping 10.0.0.2 --tcp --rate=1000 --data-length=10 -c20000 -NH
 ```
-Which generates 2 million packets TCP taffic, at a rate of 100 packets/second, of payload size 10 bytes. The -HN switch hides output and prevents responding to any replies.
-While faster rates are available, 100 packets/second staggers the flow so a maximum of one packet is being processed at any instance.
+Which generates 200,000 packets TCP taffic, at a rate of 1000 packets/second, of payload size 10 bytes. The -HN switch hides output and prevents responding to any replies.
+While faster rates are available, 1000 packets/second staggers the flow so a maximum of one packet is being processed at any instance. 
+Nping has a limitation of control over packets at rates beyond this.
 
 The range of packet size used are: {10,60,200,600,1000,1400,1460}. A size of 1460 bytes is the maximum payload available without fragmenting packets.
-Between each run of the command at a data-length, a ten UDP packets are is sent, and a slower rate. The size of this packet changes with each run to assist with differentiating runs. Sending at a rate of 1 packet/second allows a ten second gap between runs.
+Between each run of the command at a data-length, a UDP packet are is sent, and a slower rate. The size of this packet changes with each run to assist with differentiating runs. Sending at a rate of 1 packet/second allows a one second gap between runs.
 ```
-$ nping 10.0.0.2 --udp --rate 1 --data-length 101 -c1
+$ nping 10.0.0.2 --udp --rate=1 --data-length=0 -c1
 ```
 
 The whole experiment is repeated ten times, and an average of those results calculated.
