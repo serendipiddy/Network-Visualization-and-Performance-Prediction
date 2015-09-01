@@ -73,7 +73,16 @@ Finding the difference the output from TCPdump on each switch interface, for eac
 
 Service rate is trivially calculated as 1/(service time).
 
-A simple python script for processing the tcpdump files into csv formatted arrival and departure times is included (coming soon!).
+A simple python script for processing the tcpdump files into table formatted t1, t2 times and the service time is included [parseTcpd.py](github.com/serendipiddy/openflow-performance-visualizer/blob/master/svcrate/parseTcpd.py). It will break up a TCPdump file into separate output files for each run, based on the UDP packets sent between runs.
+
+To use this, run as:
+```
+$ python parseTcpd.py -i ingress_port.dump -j egress_port.dump
+```
+It can then be used to verify that the switch processed just one packet at a time using the output file of the command above:
+```
+$ python parseTcpd.py -s outputfile
+```
 
 ## Results
 The general pattern should be that service rate increases with packet size, due to propagation and processing delays within the switch.
