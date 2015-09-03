@@ -6,7 +6,7 @@ var config = {
     /* The 'brand'/name of the switch determines mean service rate */
     /* 'pica8' 'openWRT' 'facebook' etc */
     'openvswitch_vm': {
-          'service_rate': 56625,
+          'service_rate': 92185,
           'service_variance': 0,
         },
     'pica8':  {
@@ -14,7 +14,7 @@ var config = {
           'service_variance': 0,
         },
     'user_defined': {
-          'service_rate': 65000,
+          'service_rate': 56625,
           'service_variance': 0,
         },
   },

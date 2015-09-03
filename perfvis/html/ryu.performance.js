@@ -80,10 +80,10 @@ var pf_data = {
         'ports': [],            /* populated next */
         'aggregate': {          /* populated next */
           'arrival_rate': 0,    
-          'departure_rate': 0, 
-          'proportion_in':  [],
-          'proportion_out': [] 
+          'departure_rate': 0
         },
+        'proportion_in':  [],
+        'proportion_out': [],
         'adjacent_nodes': []      /* populate next */
       };
       return {
@@ -200,12 +200,12 @@ var pf_data = {
             }
             live.aggregate.arrival_rate = total_in;
             live.aggregate.depart_rate = total_out;
-            live.aggregate.proportion_in = [];
-            live.aggregate.proportion_out = [];
+            live.proportion_in = [];
+            live.proportion_out = [];
             
             for (var i = 0; i<rate_in.length; i++) {
-              live.aggregate.proportion_in.push({'port_no':rate_in[i].port_no,'proportion':rate_in[i].proportion/total_in});
-              live.aggregate.proportion_out.push({'port_no':rate_out[i].port_no,'proportion':rate_out[i].proportion/total_out});
+              live.proportion_in.push({'port_no':rate_in[i].port_no,'proportion':rate_in[i].proportion/total_in});
+              live.proportion_out.push({'port_no':rate_out[i].port_no,'proportion':rate_out[i].proportion/total_out});
             }
             sn_length++;
             // console.log('finished updating '+dpid);
@@ -340,6 +340,31 @@ var model = {
       
       return results;
     }
+}
+
+var Node = function(dpid, ports, proportions) {
+  this.dpid = dpid;
+  this.ports = []; // pointers to the adjacent nodes
+  this.proportion_out = []; // proportion of each node in ports
+  this.localIndex = 'local';
+}
+var spanningtree = {
+  root: '',
+  members: [], 
+  create: function(src) { // creates a new root node, then populates
+    this.root = new Node(dpid,[],[]);
+    // BFS, no backsies, stop when no ports
+    ports = pf_data.live_data(root.dpid).adjacent_nodes;
+  },
+  populate_tree: function() {
+  
+  },
+  contains: function(dpid) {
+    if ($.inArray(dpid,members)>=0) {
+      return true;
+    }
+    return false;
+  },
 }
 
 /* Graphing currently connects to the GUI vis file */
