@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <link rel="stylesheet" type="text/css" href="./ryu.vis.css">
 <!-- <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> -->
-<script src="./jquery-1.11.3.min.js" charset="utf-8"></script>
-<script src="./d3.js" charset="utf-8"></script>
+<script src="./js/jquery-1.11.3.min.js" charset="utf-8"></script>
+<script src="./js/d3.js" charset="utf-8"></script>
 <script src="./config.js" charset="utf-8"></script>
 <script src="./mm1.js" charset="utf-8"></script>
 <script src="./mm1k.js" charset="utf-8"></script>
 <script src="./draftvis.js" id="page-layout" charset="utf-8"></script>
+<script src="./tests.js" charset="utf-8"></script>
 </head>
 <body>
 <h1>Ryu Performance Viewer</h1>
@@ -43,7 +44,7 @@
       <ul id="switch-input">
         <li>Arrival: <input id="arrival-rate" type="number" name="arrival" max="100000000" step="100"></li>
         <li>Service: <input id="service-rate"type="number" name="service" max="100000000" step="100"></li>
-        <li>Queue capacity: <input id="queue-capacity"type="number" name="service" min="0" max="100000000"></li>
+        <li>Queue capacity: <input id="queue-capacity"type="number" name="capacity" min="1" max="100000000"></li>
       </ul>
     </div>
   </div>

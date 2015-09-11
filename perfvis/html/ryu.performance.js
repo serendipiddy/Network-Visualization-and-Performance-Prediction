@@ -111,7 +111,7 @@ var pf_data = {
         for (dpid in update) { 
             /* Doesn't exist, make it */
             if (!this.node_data[dpid]) {
-              var new_node = this.new_node(dpid,0,0,true);
+              var new_node = this.new_node(dpid,0,100,true);
               this.node_data[dpid] = new_node.node;
               this.live_data[dpid] = new_node.live;
               menu_addDp(dpid);
@@ -152,9 +152,9 @@ var pf_data = {
             // console.log('A:'+live.ports);
             for (var i = 0; i<update_dp.length; i++) {
               if ($.inArray(update_dp[i].port_no,live.ports)<0) { // is in update but not local
-                console.log('adding \'live but not local\' ports');
+                console.log('adding \'live but not local\' port'+update_dp[i].port_no);
                 live.ports.push(update_dp[i].port_no);
-                this.live_data.adjacent_nodes = topo.get_links(dpid);
+                this.live_data[dpid].adjacent_nodes = topo.get_links(dpid);
               }
             }
             if (live.ports.length != update_dp.length) {
@@ -334,7 +334,7 @@ var model = {
       var results = {};
       /* Construct results from configuration */
       for (var i = 0; i < model_config.model_out.length; i++) {
-          fn = model_config.model_out[i];
+          fn = model_config.model_out[i]; // get function defined in model
           results[fn] = model[fn]();
       }
       
@@ -344,22 +344,56 @@ var model = {
 
 var Node = function(dpid, ports, proportions) {
   this.dpid = dpid;
-  this.ports = []; // pointers to the adjacent nodes
-  this.proportion_out = []; // proportion of each node in ports
-  this.localIndex = 'local';
+  this.ports = []; // dpid of the adjacent nodes
+  this.proportions = []; // proportion of each node in ports
+  this.neighbours = [];
 }
 var spanningtree = {
   root: '',
   members: [], 
   create: function(src) { // creates a new root node, then populates
-    this.root = new Node(dpid,[],[]);
-    // BFS, no backsies, stop when no ports
-    ports = pf_data.live_data(root.dpid).adjacent_nodes;
+    this.root = new Node(src,[],[]);
+    this.members.push(src);
+    nd = pf_data.live_data[this.root.dpid];
+    console.log('Created root: '+src)
+    
+    console.log('Adjacent nodes: '+nd.adjacent_nodes.length);
+    for (var i = 0; i < nd.adjacent_nodes.length; i++) {
+      if ($.inArray(nd.adjacent_nodes[i].port_no,OFPorts)<0) {// ignore OF ports, like LOCAL
+        console.log('Processing port: '+nd.adjacent_nodes[i].port_no)
+        num = nd.adjacent_nodes[i].port_no;
+        this.root.ports.push(nd.adjacent_nodes[i].neighbour);
+        // get port proportions
+        if (nd.proportion_out[i].port_no != num) {
+          for (var j = 0; j < nd.proportion_out.length; j++) {
+            if (nd.proportion_out.port_no == num) {
+              this.root.proportions.push(nd.proportion_out[i]);
+              break;
+            }
+          }
+        }
+        else this.root.proportions.push(nd.proportion_out[i]);
+      }
+    }
+    this.populate_tree();
   },
+  // BFS, no backsies, stop when no ports
   populate_tree: function() {
-  
+    for (var i = 0; i < this.root.ports; i++) {
+      console.log('from root, next node is: '+this.root.ports[i])
+      this.root.neighbours.push(next_node(this.root.ports[i]));
+    }
   },
-  contains: function(dpid) {
+  next_node: function(dpid) { // recursive function to add nodes to the tree /* TODO: make this iterative for better resource usage */
+    if (this.contains(dpid)) return; // base case
+    // populate node
+      // ignore LOCAL port
+      // get neighbours that aren't this in_port
+      // adjust proportions to remaining ports
+    // recur
+    // return the new node
+  },
+  contains: function(dpid) { /* true if dpid has been visited */
     if ($.inArray(dpid,members)>=0) {
       return true;
     }
@@ -461,7 +495,15 @@ var update_gui = function () { /* Updates the displayed performance values */
     graphing.update_graphs(in_data,model_data);
 }
 
-/* Samples for testing offline */
+
+/*
+  Functions and data for offline editing:
+    - Sample: samples stat and topo data
+    - initLocal: initializes the data structures, starts a random update loop
+    - stopLocal: kills the random loop
+    - setSampleData: sets the arrival rate of the sample data, stops local loop
+*/
+
 var sample = {
   data: {
     "0000000000000001": [
@@ -495,7 +537,19 @@ var sample = {
   ]
 };
 
-function init_local() {
+function setSampleArv(arv) {
+    stopLocal()
+    for (dpid in sample.data) {
+      for (var i = 0; i< sample.data[dpid].length; i++) {
+          sample.data[dpid][i].arrival_rate = arv;
+       }
+    }
+    pf_data.event_update_statistics(topo.nodes,sample.data);
+    console.log('successful update');
+    update_gui();
+}
+
+function initLocal() {
     topo.initialize({switches: sample.switches, links: sample.links});
     elem.update();
     pf_data.event_update_statistics(topo.nodes,sample.data);
@@ -510,8 +564,9 @@ function init_local() {
         }
       }
     };
+    
       
-    setInterval(function(s) {
+    offlineLoop = setInterval(function(s) {
       random_sample_data();
       pf_data.event_update_statistics(topo.nodes,sample.data);
       console.log('successful update');
@@ -522,6 +577,10 @@ function init_local() {
     }, 2000);
 }
 
+function stopLocal() {
+    clearInterval(offlineLoop)
+}
 
-init_local(); // for offline testing
+var offlineLoop = 'none';
+initLocal(); // for offline testing
 // main();    // for server

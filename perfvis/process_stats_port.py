@@ -96,9 +96,13 @@ def avg_rates(current, previous, placeholder):
             prev_data = previous[port_no]
             duration = p['duration_sec'] - prev_data['duration_sec']
             port_stats['rx_packets']   = p['rx_packets'] - prev_data['rx_packets']
-            port_stats['arrival_rate'] = float(port_stats['rx_packets'])/duration
             port_stats['tx_packets']   = p['tx_packets'] - prev_data['tx_packets']
-            port_stats['depart_rate']  = float(port_stats['tx_packets'])/duration
+            if (duration > 0):
+              port_stats['arrival_rate'] = float(port_stats['rx_packets'])/duration
+              port_stats['depart_rate']  = float(port_stats['tx_packets'])/duration
+            else:
+              port_stats['arrival_rate'] = float(port_stats['rx_packets'])
+              port_stats['depart_rate']  = float(port_stats['tx_packets'])
         
         port_stats['total_rx'] = p['rx_packets']
         port_stats['total_tx'] = p['tx_packets']

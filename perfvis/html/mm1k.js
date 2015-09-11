@@ -3,7 +3,6 @@ var mm1k_basic = {
   mu:0,
   rho:0,
   k:0,
-  len:-1,
   set_input: function(input) {
     this.lam = input.arrival_rate;
     this.mu  = input.service_rate;
@@ -18,18 +17,12 @@ var mm1k_basic = {
     return this.rho;
   },
   sojourn: function() {
-    if (this.len == -1) { // avoid a double calculation
-      return this.length/this.lam_eff();
-    }
-    return this.len/this.lam_eff();
+    return this.length()/this.lam_eff();
   },
   length: function() {
-    if (this.len == -1) { // avoid a double calculation
-      var a = this.rho * (1 - (this.k+1)*Math.pow(this.rho,this.k) + this.k*Math.pow(this.rho, this.k+1));
-      var b = (1 - this.rho)*(1 - Math.pow(this.rho,this.k+1));
-      this.len = a/b;
-    }
-    return this.len;
+    var a = this.rho * (1 - (this.k+1)*Math.pow(this.rho,this.k) + this.k*Math.pow(this.rho, this.k+1));
+    var b = (1 - this.rho)*(1 - Math.pow(this.rho,this.k+1));
+    return a/b;
   },
   pi0: function() {
     if (this.lam == this.mu) {

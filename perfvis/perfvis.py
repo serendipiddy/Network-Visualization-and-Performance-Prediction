@@ -42,7 +42,7 @@ class PerformanceServerApp(app_manager.RyuApp):
         self.prevreadings = {}           # previous network readings
         self.currentstats = {}           # current network statistics
         self.logging = True
-        self.waittime = 5
+        self.waittime = 1
         self.placeholder = 'loading'
         self.statstype = 'port'          # 'port' or 'flow', depending on the desired statistics
 
