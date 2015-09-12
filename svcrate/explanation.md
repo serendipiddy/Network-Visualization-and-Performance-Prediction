@@ -105,3 +105,17 @@ For the measurement of a hardware switch, a similar setup can be used. The ideal
 * Placing a tap on the link between the source host and the switch and the link between the switch and the sink host. These taps forward packets to a separate device where TCPdump is run and results collected. This is the ideal case.
 * Using only the source, sink and switch, run TCPdump on the source and sink hosts. This would require time synchronisation between the hosts and relies on the assumption that the time of departure from the source host is the same as the arrival at the switch, similarly assumes the departure time at the switch is the same as the arrival time at the sink host.
 * The same as the VM experiment. If the switch OS is linux based, running TCPdump on the switch to monitor the network interfaces directly. However this may introduce unwanted overhead and is not recommended.
+
+#### Implementation used for Pica8 switch
+With access to a device with many ethernet ports, such as a netFPGA board, another version is possible. With four ports, the network on two different links can be compared on the same device. Port 1 connects to the switch, port 2 receives traffic back from the switch. Port 3 loops to port 4. With the assumption that the time of arrival at port 4 and the switch are equal, the difference between the arrival time of traffic on port 4 and port 2 are equivalent to t1 and t2 respectively.
+
+The topology for this setup is below.
+```
+   =============     ==========
+   +         1-O=====O        +
+   +         2-O=====O switch +
+   + netFPGA   +     ==========
+   +         3-O===\ 
+   +         4-O===/
+   =============
+```
