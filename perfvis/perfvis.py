@@ -85,7 +85,9 @@ class PerformanceServerApp(app_manager.RyuApp):
                 
             if self.datapaths.values():
                 self.req_count += 1
-                print("Counted %d datapaths. Request #%d sent" % (count, self.req_count))
+                # print("Counted %d datapaths. Request #%d sent" % (count, self.req_count))
+                sys.stdout.write('Counted %d datapaths. Request #%d sent' % (count, self.req_count))
+                sys.stdout.flush();
             hub.sleep(self.waittime)
             self.rpc_broadcall('event_update_statistics',self.currentstats)
 
