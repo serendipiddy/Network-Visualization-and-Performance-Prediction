@@ -37,31 +37,3 @@ var config = {
   'config_keys': ['switch_brand', 'queueing_model', 'service_rate', 'pnf', 'queue_capacity'],
   'adjustment_keys': ['service_rate','arrival_rate','pnf','queue_capacity'],
 }
-/* In ryu.performance.js.model now */
-// var output = function(model_name, input) {
-    // var model_config = config.queueing_models[model_name];
-    // var model = config.get_model[model_name];
-    
-    // var model_in = {};
-    // /* Check input data */
-    // for (var i = 0; i < model_config.model_in.length; i++) {
-        // val = model_config.model_in[i];
-        // if (!val in input) {
-          // console.log('Model required input \''+val+'\' not found');
-          // return;
-        // }
-        // /* check that each val is valid */
-        // model_in[val] = input[val];
-    // }
-    
-    // model.set_input(model_in);
-    
-    // var results = {};
-    // /* Construct results from configuration */
-    // for (var i = 0; i < model_config.model_out.length; i++) {
-        // fn = model_config.model_out[i];
-        // results[fn] = model[fn]();
-    // }
-    
-    // return results;
-// }

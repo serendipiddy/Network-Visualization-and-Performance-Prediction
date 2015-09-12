@@ -251,9 +251,9 @@ var topo = {
     },
     get_links: function(dpid) { /* Added for pf_data */
       _links = [];
-      for(var i = 0; i<this.links.length; i++) {
+      // {port_no: {dpid:, port_no:}}
+      for(var i = 0; i<this.links.length; i++) { // iterate through links
         if(this.links[i].port.src.dpid == dpid) {
-          // {port_no: {dpid:, port_no:}}
           _links.push(
             { 'port_no': this.links[i].port.src.port_no,
               'topo_node_idx': this.links[i].source.index,
@@ -266,7 +266,7 @@ var topo = {
             }
           );
         }
-        else if (this.links[i].port.dst.dpid) {
+        else if (this.links[i].port.dst.dpid == dpid) {
           _links.push(
             { 'port_no': this.links[i].port.dst.port_no,
               'topo_node_idx': this.links[i].target.index,

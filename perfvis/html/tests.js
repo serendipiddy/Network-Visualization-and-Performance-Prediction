@@ -1,12 +1,12 @@
 function testModel(verbose) {
-    test_mm1 = {
+    var test_mm1 = {
       lam: [100.0, 200.0, 200.0, 0.1, 100.0, -10.0, 10.0],
       mu:  [200.0, 100.0, 200.0, 100.0,  0.1, 10.0, -10.0],
       rho: [5e-01, 2e+00, 1e+00, 1e-03, 1e+03, -1e+00, -1e+00],
       soj: [0.01000000, -0.01000000, Number.POSITIVE_INFINITY, 0.01001001001001001, -0.01001001001001001, 0.05000000, -0.05000000],
       len: [1.000000000, -2.000000000, Number.POSITIVE_INFINITY, 0.001001001001001001, -1.001001001001001001, -0.500000000, -0.500000000]
     };
-    test_mm1k = {
+    var test_mm1k = {
       lam: [100.0, 200.0, 200.0, 0.1, 100.0, -10.0, 10.0],
       mu:  [200.0, 100.0, 200.0, 100.0, 0.1, 10.0, -10.0],
       rho: [5e-01, 2e+00, 1e+00, 1e-03, 1e+03, -1e+00, -1e+00],
@@ -111,8 +111,687 @@ function testModel(verbose) {
       }
     }
     console.log('== PASS '+numPass+'/'+numTests+' ===');
-    
-    
-    // mod = config.queueing_models['mm1k_basic'];
-    
+}
+
+function testSpanningTree() {
+  var live_data = {
+  "0000000000000001": {
+    "dpid": "0000000000000001",
+    "ports": [
+      1,
+      2,
+      4294967294
+    ],
+    "aggregate": {
+      "arrival_rate": 2,
+      "departure_rate": 0,
+      "depart_rate": 2
+    },
+    "proportion_in": [
+      {
+        "port_no": 1,
+        "proportion": 0.5
+      },
+      {
+        "port_no": 2,
+        "proportion": 0.5
+      }
+    ],
+    "proportion_out": [
+      {
+        "port_no": 1,
+        "proportion": 0.5
+      },
+      {
+        "port_no": 2,
+        "proportion": 0.5
+      }
+    ],
+    "adjacent_nodes": [
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 5,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000001",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000002",
+        "topo_node_idx": 0,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000003",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 2,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000001",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 3,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000002",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 6,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000002",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000001",
+        "topo_node_idx": 0,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000003",
+          "topo_node_idx": 1
+        }
+      }
+    ]
+  },
+  "0000000000000002": {
+    "dpid": "0000000000000002",
+    "ports": [
+      1,
+      2,
+      3,
+      4294967294
+    ],
+    "aggregate": {
+      "arrival_rate": 3,
+      "departure_rate": 0,
+      "depart_rate": 3
+    },
+    "proportion_in": [
+      {
+        "port_no": 1,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 2,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 3,
+        "proportion": 0.3333333333333333
+      }
+    ],
+    "proportion_out": [
+      {
+        "port_no": 1,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 2,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 3,
+        "proportion": 0.3333333333333333
+      }
+    ],
+    "adjacent_nodes": [
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 5,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000001",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 4,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000002",
+          "topo_node_idx": 0
+        }
+      },
+      {
+        "port_no": "00000001",
+        "topo_node_idx": 1,
+        "neighbour": {
+          "dpid": "0000000000000003",
+          "port": "00000003",
+          "topo_node_idx": 2
+        }
+      },
+      {
+        "port_no": "00000002",
+        "topo_node_idx": 1,
+        "neighbour": {
+          "dpid": "0000000000000004",
+          "port": "00000003",
+          "topo_node_idx": 3
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 6,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000002",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 1,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000001",
+          "topo_node_idx": 0
+        }
+      }
+    ]
+  },
+  "0000000000000003": {
+    "dpid": "0000000000000003",
+    "ports": [
+      1,
+      2,
+      3,
+      4294967294
+    ],
+    "aggregate": {
+      "arrival_rate": 1,
+      "departure_rate": 0,
+      "depart_rate": 3
+    },
+    "proportion_in": [
+      {
+        "port_no": 1,
+        "proportion": 0
+      },
+      {
+        "port_no": 2,
+        "proportion": 0
+      },
+      {
+        "port_no": 3,
+        "proportion": 1
+      }
+    ],
+    "proportion_out": [
+      {
+        "port_no": 1,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 2,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 3,
+        "proportion": 0.3333333333333333
+      }
+    ],
+    "adjacent_nodes": [
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 5,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000001",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 4,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000002",
+          "topo_node_idx": 0
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 2,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000001",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 3,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000002",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 6,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000002",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 1,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000001",
+          "topo_node_idx": 0
+        }
+      }
+    ]
+  },
+  "0000000000000004": {
+    "dpid": "0000000000000004",
+    "ports": [
+      1,
+      2,
+      3,
+      4294967294
+    ],
+    "aggregate": {
+      "arrival_rate": 1,
+      "departure_rate": 0,
+      "depart_rate": 3
+    },
+    "proportion_in": [
+      {
+        "port_no": 1,
+        "proportion": 0
+      },
+      {
+        "port_no": 2,
+        "proportion": 0
+      },
+      {
+        "port_no": 3,
+        "proportion": 1
+      }
+    ],
+    "proportion_out": [
+      {
+        "port_no": 1,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 2,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 3,
+        "proportion": 0.3333333333333333
+      }
+    ],
+    "adjacent_nodes": [
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 5,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000001",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 4,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000002",
+          "topo_node_idx": 0
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 2,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000001",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 3,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000002",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 6,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000002",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 1,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000001",
+          "topo_node_idx": 0
+        }
+      }
+    ]
+  },
+  "0000000000000005": {
+    "dpid": "0000000000000005",
+    "ports": [
+      1,
+      2,
+      3,
+      4294967294
+    ],
+    "aggregate": {
+      "arrival_rate": 3,
+      "departure_rate": 0,
+      "depart_rate": 3
+    },
+    "proportion_in": [
+      {
+        "port_no": 1,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 2,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 3,
+        "proportion": 0.3333333333333333
+      }
+    ],
+    "proportion_out": [
+      {
+        "port_no": 1,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 2,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 3,
+        "proportion": 0.3333333333333333
+      }
+    ],
+    "adjacent_nodes": [
+      {
+        "port_no": "00000001",
+        "topo_node_idx": 4,
+        "neighbour": {
+          "dpid": "0000000000000006",
+          "port": "00000003",
+          "topo_node_idx": 5
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 4,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000002",
+          "topo_node_idx": 0
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 2,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000001",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 3,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000002",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000002",
+        "topo_node_idx": 4,
+        "neighbour": {
+          "dpid": "0000000000000007",
+          "port": "00000003",
+          "topo_node_idx": 6
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 1,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000001",
+          "topo_node_idx": 0
+        }
+      }
+    ]
+  },
+  "0000000000000006": {
+    "dpid": "0000000000000006",
+    "ports": [
+      1,
+      2,
+      3,
+      4294967294
+    ],
+    "aggregate": {
+      "arrival_rate": 1,
+      "departure_rate": 0,
+      "depart_rate": 3
+    },
+    "proportion_in": [
+      {
+        "port_no": 1,
+        "proportion": 0
+      },
+      {
+        "port_no": 2,
+        "proportion": 0
+      },
+      {
+        "port_no": 3,
+        "proportion": 1
+      }
+    ],
+    "proportion_out": [
+      {
+        "port_no": 1,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 2,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 3,
+        "proportion": 0.3333333333333333
+      }
+    ],
+    "adjacent_nodes": [
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 5,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000001",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 4,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000002",
+          "topo_node_idx": 0
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 2,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000001",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 3,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000002",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 6,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000002",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 1,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000001",
+          "topo_node_idx": 0
+        }
+      }
+    ]
+  },
+  "0000000000000007": {
+    "dpid": "0000000000000007",
+    "ports": [
+      1,
+      2,
+      3,
+      4294967294
+    ],
+    "aggregate": {
+      "arrival_rate": 1,
+      "departure_rate": 0,
+      "depart_rate": 3
+    },
+    "proportion_in": [
+      {
+        "port_no": 1,
+        "proportion": 0
+      },
+      {
+        "port_no": 2,
+        "proportion": 0
+      },
+      {
+        "port_no": 3,
+        "proportion": 1
+      }
+    ],
+    "proportion_out": [
+      {
+        "port_no": 1,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 2,
+        "proportion": 0.3333333333333333
+      },
+      {
+        "port_no": 3,
+        "proportion": 0.3333333333333333
+      }
+    ],
+    "adjacent_nodes": [
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 5,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000001",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 4,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000002",
+          "topo_node_idx": 0
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 2,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000001",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 3,
+        "neighbour": {
+          "dpid": "0000000000000002",
+          "port": "00000002",
+          "topo_node_idx": 1
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 6,
+        "neighbour": {
+          "dpid": "0000000000000005",
+          "port": "00000002",
+          "topo_node_idx": 4
+        }
+      },
+      {
+        "port_no": "00000003",
+        "topo_node_idx": 1,
+        "neighbour": {
+          "dpid": "0000000000000001",
+          "port": "00000001",
+          "topo_node_idx": 0
+        }
+      }
+    ]
+  }
+  };
+
 }

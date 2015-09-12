@@ -40,7 +40,7 @@ ws.onmessage = function(event) {
     // } catch(err) {console.log("ERROR"+err);}
     
     var ret = {"id": new_data.id, "jsonrpc": "2.0", "result": result};
-    console.log("ws_performance returning: ",JSON.stringify(ret));
+    // console.log("ws_performance returning: ",JSON.stringify(ret));
     this.send(JSON.stringify(ret));
 }
 
@@ -151,8 +151,18 @@ var pf_data = {
             /* check ports are the same */
             // console.log('A:'+live.ports);
             for (var i = 0; i<update_dp.length; i++) {
-              if ($.inArray(update_dp[i].port_no,live.ports)<0) { // is in update but not local
-                console.log('adding \'live but not local\' port'+update_dp[i].port_no);
+              
+              
+              
+              /* TODO currently not excluding 4294967294 */
+              console.log('Port no '+update_dp[i].port_no)
+              console.log('live ports '+live.ports)
+              console.log('in array '+$.inArray(update_dp[i].port_no,live.ports))
+              
+              
+              
+              if ($.inArray(update_dp[i].port_no,live.ports)<0 && !$,inArray(update_dp[i].port_no,OFPorts)) { // is in update but not local 
+                console.log('adding \'live but not local\' port '+update_dp[i].port_no);
                 live.ports.push(update_dp[i].port_no);
                 this.live_data[dpid].adjacent_nodes = topo.get_links(dpid);
               }
@@ -167,7 +177,7 @@ var pf_data = {
                 else {
                   console.log('removing from live ports'); // removed by replacing live.ports with new_ports below
                   /* remove from adjacent nodes */
-                  for (var n = 0; n<this.live_data.adjacent_nodes; n++) {
+                  for (var n = 0; n<this.live_data.adjacent_nodes.length; n++) {
                     if (this.live_data.adjacent_nodes[n].port_no == live.ports[i])
                     delete this.live_data.adjacent_nodes[n];
                   }
@@ -342,59 +352,154 @@ var model = {
     }
 }
 
-var Node = function(dpid, ports, proportions) {
+var Node = function(dpid) {
   this.dpid = dpid;
-  this.ports = []; // dpid of the adjacent nodes
+  this.ports = []; // dpid of the adjacent nodes, possibly redundant..
   this.proportions = []; // proportion of each node in ports
   this.neighbours = [];
 }
-var spanningtree = {
+var spanningtree = { /* A directed, rooted spanning tree */
   root: '',
-  members: [], 
-  create: function(src) { // creates a new root node, then populates
-    this.root = new Node(src,[],[]);
-    this.members.push(src);
-    nd = pf_data.live_data[this.root.dpid];
-    console.log('Created root: '+src)
+  members: [], // list of dpids
+  nodes: [],   // list of Nodes
+  populate_node: function(member,pfnd) { /* populates an existing node */
+    var debug = true;
+    var currnode = this.nodes[member];
+    var numNeigh = pfnd.adjacent_nodes.length;
+    var neighs   = pfnd.adjacent_nodes;
+    if (debug) console.log('  ('+member+'-plt) #adjnde: '+numNeigh);
     
-    console.log('Adjacent nodes: '+nd.adjacent_nodes.length);
-    for (var i = 0; i < nd.adjacent_nodes.length; i++) {
-      if ($.inArray(nd.adjacent_nodes[i].port_no,OFPorts)<0) {// ignore OF ports, like LOCAL
-        console.log('Processing port: '+nd.adjacent_nodes[i].port_no)
-        num = nd.adjacent_nodes[i].port_no;
-        this.root.ports.push(nd.adjacent_nodes[i].neighbour);
-        // get port proportions
-        if (nd.proportion_out[i].port_no != num) {
-          for (var j = 0; j < nd.proportion_out.length; j++) {
-            if (nd.proportion_out.port_no == num) {
-              this.root.proportions.push(nd.proportion_out[i]);
-              break;
+    console.log(JSON.stringify(neighs,null,2));
+    
+    for (var i = 0; i < numNeigh; i++) {
+      /* ignore OF ports, like LOCAL */
+      if ($.inArray(neighs[i].port_no,OFPorts)<0) { 
+        
+        var dpidNeigh = neighs[i].neighbour.dpid;
+        if(!this.contains(dpidNeigh)) { /* reverse links */
+            // create and add to members
+            var newNeigh = new Node(dpidNeigh);
+            this.members.push(dpidNeigh);
+            this.nodes.push(newNeigh);
+            currnode.ports.push(dpidNeigh); 
+            currnode.neighbours.push(newNeigh);
+        
+            if (debug) console.log('  ('+member+'-plt) maknegh: '+dpidNeigh);
+            
+            // get port proportions
+            var pnum = neighs[i].port_no; // find this ports proportions
+            
+            if (debug) console.log('  ('+member+'-plt) propprt: '+pnum);
+            for (var j = 0; j < pfnd.proportion_out.length; j++) {
+              var propNeigh = pfnd.proportion_out[j];
+              if (debug)  console.log('  ('+member+'-plt) tstprop: '+propNeigh.port_no);
+              if (parseInt(propNeigh.port_no) == parseInt(pnum)) {
+                if (debug) console.log('  ('+member+'-plt) addprop: p'+propNeigh.port_no+' '+propNeigh.proportion.toFixed(3));
+                currnode.proportions.push(propNeigh.proportion);
+                break;
+              }
             }
-          }
         }
-        else this.root.proportions.push(nd.proportion_out[i]);
       }
     }
-    this.populate_tree();
+    if (debug) console.log('  ('+member+'-plt) ports:   '+JSON.stringify(currnode.ports)); // may not be in the correct place..
   },
-  // BFS, no backsies, stop when no ports
-  populate_tree: function() {
-    for (var i = 0; i < this.root.ports; i++) {
-      console.log('from root, next node is: '+this.root.ports[i])
-      this.root.neighbours.push(next_node(this.root.ports[i]));
+  create_tree: function(src,live_data) { // create_tree('root', pf_data.live_data);
+    if (!dpid_exists(src)) {
+      return;
+    }
+    this.members = [];
+    this.nodes = [];
+    
+    this.members.push(src);
+    this.root = new Node(src);
+    this.nodes.push(this.root);
+    
+    /* populate and add neighbours to members and nodes
+        currently empty, so begin populating with root  */
+    var currMem = 0;
+    
+    while (currMem < this.members.length) {
+      var currdpid = this.members[currMem];
+      var pfnd = live_data[currdpid];
+      console.log('processing: \n'+
+          '  ('+currMem+'-cre) currMem: '+currMem+'\n'+
+          '  ('+currMem+'-cre) dpid:    '+currdpid);
+      
+      // populate node
+      this.populate_node(currMem, pfnd)
+      
+      currMem++;
     }
   },
-  next_node: function(dpid) { // recursive function to add nodes to the tree /* TODO: make this iterative for better resource usage */
-    if (this.contains(dpid)) return; // base case
-    // populate node
-      // ignore LOCAL port
-      // get neighbours that aren't this in_port
-      // adjust proportions to remaining ports
-    // recur
-    // return the new node
+  introduce_flow: function(arrival_rate_delta, proportion_fn, node_data) {
+    // TODO: clean past alteration from node_data 
+    // traverse tree in BFS fashion
+    
+    // // var n_data = node_data[n_curr.dpid];
+    // var n_curr = members[0];
+    // var delta_i = 0; // position in proportions for this node
+    var debug = true;
+    var deltas = [];
+    deltas.push(arrival_rate_delta); // root's delta
+    
+    // at each step, 
+      // create alteration in pf_data.node_data which reflects this arrival_rate_delta
+      // get result of division algorithm /* Divide up flows on current ports*/ 
+    for (var i = 0; i<this.members.length; i++) {
+      var n_curr = this.members[i];
+      if (debug) console.log('  ('+i+'-inf) n_curr:  '+n_curr);
+      if (debug) console.log('  ('+i+'-inf) delta:  '+deltas[i]);
+      node_data[n_curr].adjustments.arrival_rate = deltas[i];
+      var proportions = proportion_fn(i, this.nodes);
+      
+      for (var p = 0; p < proportions.length; p++) {
+        deltas.push(proportions[p]*deltas[i]);
+        if (debug) console.log('  ('+i+'-inf) prop:  '+proportions[p]*deltas[i]);
+      }
+    }
+  },
+  get_proportion_prop: function(member, nodes) { /* divide according to proportion_out distributions */
+    var proportions = [];
+    var sum = 0; 
+    var prop_out = ''; // for debug
+    var debug = true;
+    
+    var currnode = nodes[member];
+    
+    if (debug) console.log('  ('+member+'-gpp) proprtn: '+JSON.stringify(currnode.proportions));
+    for (var i = 0; i < currnode.proportions.length; i++) { sum += currnode.proportions[i]; }
+    
+    // if (sum == 0) currnode.proportions[i] = 1; // ###### TODO IS HERE ###### case of sum == 0 ######
+    
+    if (debug) console.log('  ('+member+'-gpp) sum:   '+sum.toFixed(3));
+    
+    for (var i = 0; i < currnode.proportions.length; i++) {
+        console.log('  ('+member+'-gpp)   node:  '+currnode.proportions[i].toFixed(3));
+        proportions[i] = currnode.proportions[i]/sum;
+        prop_out = prop_out +' '+proportions[i].toFixed(3);
+    }
+    
+    console.log('  ('+member+'-gpp) proprtn: '+prop_out);
+    return proportions;
+  },
+  get_proportion_equal: function(member, nodes) { /* divide evenly between the ports */
+    var proportions = [];
+    var prop_out = ''; // for debug
+    var debug = true;
+    
+    var currnode = nodes[member];
+    if (debug) console.log('  ('+member+'-gpe) nodelen:*'+currnode.proportions.length);
+    for (var i = 0; i < currnode.proportions.length; i++) { 
+        proportions[i] = 1/currnode.proportions.length;
+        prop_out = prop_out +' '+proportions[i].toFixed(3);
+        if (debug) console.log('  ('+member+'-gpe)    node: '+proportions[i].toFixed(3));
+    }
+    if (debug) console.log('  ('+member+'-gpe) proprtn: '+prop_out);
+    return proportions;
   },
   contains: function(dpid) { /* true if dpid has been visited */
-    if ($.inArray(dpid,members)>=0) {
+    if ($.inArray(dpid,this.members)>=0) {
       return true;
     }
     return false;
@@ -582,5 +687,5 @@ function stopLocal() {
 }
 
 var offlineLoop = 'none';
-initLocal(); // for offline testing
-// main();    // for server
+// initLocal(); // for offline testing
+main();    // for server
