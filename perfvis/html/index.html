@@ -42,9 +42,14 @@
       </ul>
       <h3>Input</h3>
       <ul id="switch-input">
-        <li>Arrival: <input id="arrival-rate" type="number" name="arrival" max="100000000" step="100"></li>
-        <li>Service: <input id="service-rate"type="number" name="service" max="100000000" step="100"></li>
-        <li>Queue capacity: <input id="queue-capacity"type="number" name="capacity" min="1" max="100000000"></li>
+        <li>Arrival: <input id="arrival-rate" type="number" name="arrival" step="100"></li>
+        <li>Service: <input id="service-rate"type="number" name="service" step="100"></li>
+        <li>Queue capacity: <input id="queue-capacity" type="number" name="capacity"></li>
+        <li>Cascade: 
+          <select id='select-cascade'>
+            <option val="get_proportion_prop">Proportional</option>
+            <option val="get_proportion_equal">Equal</option>
+          </select></li>
       </ul>
     </div>
   </div>

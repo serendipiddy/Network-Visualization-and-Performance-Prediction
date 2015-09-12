@@ -149,8 +149,7 @@ var pf_data = {
             
             /* check ports are the same */
             for (var i = 0; i<update_dp.length; i++) {
-              if ($.inArray(update_dp[i].port_no,live.ports)<0 
-                      && $.inArray(update_dp[i].port_no,OFPorts)<0) { // is in update but not local 
+              if ($.inArray(update_dp[i].port_no,live.ports)<0 ) { // is in update but not local  //  && !OFPorts.hasOwnProperty(update_dp[i].port_no)
                 console.log('adding \'live but not local\' port '+update_dp[i].port_no);
                 live.ports.push(update_dp[i].port_no);
                 this.live_data[dpid].adjacent_nodes = topo.get_links(dpid);
@@ -159,7 +158,7 @@ var pf_data = {
             if (live.ports.length != update_dp.length) {
               var new_ports = [];
               for (var i = 0; i<live.ports.length; i++) {
-                if ($.inArray(live.ports[i],update_dp>=0)) { // is local but not in update
+                if ($.inArray(live.ports[i],update_dp)>=0) { // is local but not in update
                   console.log('in local, and in update, so save it');
                   new_ports.push(live.ports[i]);           // save ports in both
                 }
@@ -365,13 +364,13 @@ var spanningtree = { /* A directed, rooted spanning tree */
   members: [], // list of dpids
   nodes: [],   // list of Nodes
   populate_node: function(member,pfnd) { /* populates an existing node */
-    var debug = true;
+    var debug = false;
     var currnode = this.nodes[member];
     var numNeigh = pfnd.adjacent_nodes.length;
     var neighs   = pfnd.adjacent_nodes;
     if (debug) console.log('  ('+member+'-plt) #adjnde: '+numNeigh);
     
-    console.log(JSON.stringify(neighs,null,2));
+    // console.log(JSON.stringify(neighs,null,2));
     
     // add ports connecting to switches
     for (var i = 0; i < numNeigh; i++) {
@@ -418,7 +417,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
         }
         // console.log('neighs:   '+neigh_ports);
         // console.log('prop_out: '+JSON.stringify(prop_out));
-        
+
         // host link won't be in adjacent nodes.[i].port_not
         for (var i = 0; i < prop_out.length; i++) {
             if ($.inArray(parseInt(prop_out[i].port_no),neigh_ports)<0) {
@@ -436,6 +435,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     }
     this.members = [];
     this.nodes = [];
+    var debug = false;
     
     this.members.push(src);
     this.root = new Node(src);
@@ -444,11 +444,13 @@ var spanningtree = { /* A directed, rooted spanning tree */
     /* populate and add neighbours to members and nodes
         currently empty, so begin populating with root  */
     var currMem = 0;
+    if (debug) console.log('  ('+currMem+'-cre) root:    '+src)
+    else console.log('creating tree, rooted on '+src);
     
     while (currMem < this.members.length) {
       var currdpid = this.members[currMem];
       var pfnd = live_data[currdpid];
-      console.log('processing: \n'+
+      if (debug) console.log('processing: \n'+
           '  ('+currMem+'-cre) currMem: '+currMem+'\n'+
           '  ('+currMem+'-cre) dpid:    '+currdpid);
       
@@ -458,31 +460,29 @@ var spanningtree = { /* A directed, rooted spanning tree */
       currMem++;
     }
   },
-  introduce_flow: function(arrival_rate_delta, proportion_fn, node_data) {
-    // TODO: clean past alteration from node_data 
-    // traverse tree in BFS fashion
-    node_data
+  adjust_traffic: function(arrival_rate_delta, proportion_fn, pf_data) {
+    // var node_data = pf_data.node_data;
+    pf_data.clearAdjustments();
     
-    // // var n_data = node_data[n_curr.dpid];
-    // var n_curr = members[0];
-    // var delta_i = 0; // position in proportions for this node
-    var debug = true;
+    var debug = false;
     var deltas = [];
     deltas.push(arrival_rate_delta); // root's delta
     
-    // at each step, 
-      // create alteration in pf_data.node_data which reflects this arrival_rate_delta
-      // get result of division algorithm /* Divide up flows on current ports*/ 
+    /* at each step, 
+      * create alteration in pf_data.node_data which reflects this arrival_rate_delta
+      * get result of division algorithm */ 
     for (var i = 0; i<this.members.length; i++) {
       var n_curr = this.members[i];
-      if (debug) console.log('  ('+i+'-inf) n_curr:  '+n_curr);
-      if (debug) console.log('  ('+i+'-inf) delta:  '+deltas[i]);
-      node_data[n_curr].adjustments.arrival_rate = deltas[i];
+      if (debug) console.log('  ('+i+'-adj) n_curr:  '+n_curr);
+      if (debug) console.log('  ('+i+'-adj) delta:  '+deltas[i]);
+      pf_data.set_adjustment(n_curr, 'arrival_rate', deltas[i])
+      // node_data[n_curr].adjustments.arrival_rate = deltas[i];
       var proportions = proportion_fn(i, this.nodes);
       
+      /* Divide up flows among ports */ 
       for (var p = 0; p < proportions.length; p++) {
         deltas.push(proportions[p]*deltas[i]);
-        if (debug) console.log('  ('+i+'-inf) prop:  '+proportions[p]*deltas[i]);
+        if (debug) console.log('  ('+i+'-adj) prop:  '+proportions[p]*deltas[i]);
       }
     }
   },
@@ -490,7 +490,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     var proportions = [];
     var sum = 0; 
     var prop_out = ''; // for debug
-    var debug = true;
+    var debug = false;
     
     var currnode = nodes[member];
     
@@ -502,18 +502,18 @@ var spanningtree = { /* A directed, rooted spanning tree */
     if (debug) console.log('  ('+member+'-gpp) sum:   '+sum.toFixed(3));
     
     for (var i = 0; i < currnode.proportions.length; i++) {
-        console.log('  ('+member+'-gpp)   node:  '+currnode.proportions[i].toFixed(3));
+        if (debug) console.log('  ('+member+'-gpp)   node:  '+currnode.proportions[i].toFixed(3));
         proportions[i] = currnode.proportions[i]/sum;
         prop_out = prop_out +' '+proportions[i].toFixed(3);
     }
     
-    console.log('  ('+member+'-gpp) proprtn: '+prop_out);
+    if (debug) console.log('  ('+member+'-gpp) proprtn: '+prop_out);
     return proportions;
   },
   get_proportion_equal: function(member, nodes) { /* divide evenly between the ports */
     var proportions = [];
     var prop_out = ''; // for debug
-    var debug = true;
+    var debug = false;
     
     var currnode = nodes[member];
     if (debug) console.log('  ('+member+'-gpe) nodelen:*'+currnode.proportions.length);
@@ -714,5 +714,5 @@ function stopLocal() {
 }
 
 var offlineLoop = 'none';
-initLocal(); // for offline testing
-// main();    // for server
+// initLocal(); // for offline testing,omgoodness this really upsets the server if left on..
+main();    // for server

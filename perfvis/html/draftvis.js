@@ -45,7 +45,8 @@ var setControlPanelListeners = function() {
     
     $('#arrival-rate').change(function() {
         var dpid = $('#node-select').val();
-        pf_data.set_adjustment(dpid, 'arrival_rate', $('#arrival-rate').val());
+        // pf_data.set_adjustment(dpid, 'arrival_rate', $('#arrival-rate').val());
+        spanningtree.adjust_traffic($('#arrival-rate').val(),spanningtree[$('#select-cascade :selected').attr('val')],pf_data);
         console.log('adjusted arrival');
         populateDPSpecs(dpid);
     });
@@ -58,11 +59,16 @@ var setControlPanelListeners = function() {
     $('#queue-capacity').change(function() {
         var dpid = $('#node-select').val();
         var val = $('#queue-capacity').val();
-        if (val < 0) val = 0;
+        // if (val < 0) val = 0;
         val = Math.round(val);
         pf_data.set_adjustment(dpid, 'queue_capacity', val);
         console.log('adjusted queue capacity');
         populateDPSpecs(dpid);
+    });
+    $('#select-cascade').change(function() {
+        var alg = $('#select-cascade :selected').attr('val');
+        spanningtree.adjust_traffic($('#arrival-rate').val(),spanningtree[alg],pf_data);
+        console.log('changed cascade to '+alg);
     });
 }
 
@@ -72,6 +78,9 @@ $(document).ready(function() {
         if (select.val() === 'default') {
             $('#specs').hide();
             return;
+        }
+        else {
+          spanningtree.create_tree(select.val(),pf_data.live_data);
         }
         populateDPSpecs(select.val());
         $('#specs').show();
