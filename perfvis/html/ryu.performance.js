@@ -11,7 +11,6 @@ var OFPorts = {
 }
 
 var NOT_READY = -1;
-// var READY = 0;
 
 /* For receiving performance information */
 var ws = new WebSocket("ws://" + location.host + "/v1.0/performance/ws");
