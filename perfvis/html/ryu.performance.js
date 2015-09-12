@@ -147,21 +147,10 @@ var pf_data = {
               return NOT_READY;
             }
             
-            // console.log('checking ports are same')
             /* check ports are the same */
-            // console.log('A:'+live.ports);
             for (var i = 0; i<update_dp.length; i++) {
-              
-              
-              
-              /* TODO currently not excluding 4294967294 */
-              console.log('Port no '+update_dp[i].port_no)
-              console.log('live ports '+live.ports)
-              console.log('in array '+$.inArray(update_dp[i].port_no,live.ports))
-              
-              
-              
-              if ($.inArray(update_dp[i].port_no,live.ports)<0 && !$,inArray(update_dp[i].port_no,OFPorts)) { // is in update but not local 
+              if ($.inArray(update_dp[i].port_no,live.ports)<0 
+                      && $.inArray(update_dp[i].port_no,OFPorts)<0) { // is in update but not local 
                 console.log('adding \'live but not local\' port '+update_dp[i].port_no);
                 live.ports.push(update_dp[i].port_no);
                 this.live_data[dpid].adjacent_nodes = topo.get_links(dpid);
@@ -282,7 +271,7 @@ var pf_data = {
     get_gui_input_all: function() {
       var all_data = {};
       for(dpid in this.node_data) {
-        if (dpid_exists) {
+        if (dpid_exists(dpid)) {
           var ret = {
             'service_rate': {'live':this.node_data[dpid].service_rate,'adjustment':this.node_data[dpid].adjustments.service_rate},
             'arrival_rate': {'live':this.live_data[dpid].aggregate.arrival_rate, 'adjustment':this.node_data[dpid].adjustments.arrival_rate},
@@ -303,6 +292,19 @@ var pf_data = {
       }
       return all_data;
     },
+    clearAdjustments: function() {
+      for (dpid in this.node_data) {
+        if (dpid_exists(dpid)) {
+          this.node_data[dpid].adjustments = {
+            'service_rate':   0,
+            'arrival_rate':   0,
+            'pnf':            0, 
+            'queue_capacity': 0,
+            'ports':          [] 
+          }
+        }
+      }
+    }
 }
 
 var model = {
@@ -354,7 +356,7 @@ var model = {
 
 var Node = function(dpid) {
   this.dpid = dpid;
-  this.ports = []; // dpid of the adjacent nodes, possibly redundant..
+  this.ports = []; // dpid of the port
   this.proportions = []; // proportion of each node in ports
   this.neighbours = [];
 }
@@ -371,6 +373,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     
     console.log(JSON.stringify(neighs,null,2));
     
+    // add ports connecting to switches
     for (var i = 0; i < numNeigh; i++) {
       /* ignore OF ports, like LOCAL */
       if ($.inArray(neighs[i].port_no,OFPorts)<0) { 
@@ -381,27 +384,50 @@ var spanningtree = { /* A directed, rooted spanning tree */
             var newNeigh = new Node(dpidNeigh);
             this.members.push(dpidNeigh);
             this.nodes.push(newNeigh);
-            currnode.ports.push(dpidNeigh); 
             currnode.neighbours.push(newNeigh);
         
             if (debug) console.log('  ('+member+'-plt) maknegh: '+dpidNeigh);
             
             // get port proportions
             var pnum = neighs[i].port_no; // find this ports proportions
-            
+            currnode.ports.push(pnum); 
             if (debug) console.log('  ('+member+'-plt) propprt: '+pnum);
+            
             for (var j = 0; j < pfnd.proportion_out.length; j++) {
-              var propNeigh = pfnd.proportion_out[j];
-              if (debug)  console.log('  ('+member+'-plt) tstprop: '+propNeigh.port_no);
-              if (parseInt(propNeigh.port_no) == parseInt(pnum)) {
-                if (debug) console.log('  ('+member+'-plt) addprop: p'+propNeigh.port_no+' '+propNeigh.proportion.toFixed(3));
-                currnode.proportions.push(propNeigh.proportion);
-                break;
-              }
+                var propNeigh = pfnd.proportion_out[j];
+                if (debug)  console.log('  ('+member+'-plt) tstprop: '+propNeigh.port_no);
+                if (parseInt(propNeigh.port_no) == parseInt(pnum)) {
+                    if (debug) console.log('  ('+member+'-plt) addprop: p'+propNeigh.port_no+' '+propNeigh.proportion.toFixed(3));
+                    currnode.proportions.push(propNeigh.proportion);
+                    break;
+                }
             }
         }
       }
     }
+    
+    /* Add the host ports, only important if root has hosts */
+    // only need to add the proportion to the end of the array, it doesn't need more than that
+    if (numNeigh < pfnd.proportion_out.length) {
+        var prop_out = pfnd.proportion_out;
+        if (debug) console.log('  ('+member+'-plt) hstexst: #hosts:'+(prop_out.length-numNeigh));
+        
+        var neigh_ports = [];
+        for (var i = 0; i < neighs.length; i++) {
+            neigh_ports.push(parseInt(neighs[i].port_no))
+        }
+        // console.log('neighs:   '+neigh_ports);
+        // console.log('prop_out: '+JSON.stringify(prop_out));
+        
+        // host link won't be in adjacent nodes.[i].port_not
+        for (var i = 0; i < prop_out.length; i++) {
+            if ($.inArray(parseInt(prop_out[i].port_no),neigh_ports)<0) {
+                currnode.proportions.push(prop_out[i].proportion);
+                if (debug) console.log('  ('+member+'-plt) hstport: '+(prop_out[i].port_no));
+            }
+        }
+    }
+    
     if (debug) console.log('  ('+member+'-plt) ports:   '+JSON.stringify(currnode.ports)); // may not be in the correct place..
   },
   create_tree: function(src,live_data) { // create_tree('root', pf_data.live_data);
@@ -435,6 +461,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
   introduce_flow: function(arrival_rate_delta, proportion_fn, node_data) {
     // TODO: clean past alteration from node_data 
     // traverse tree in BFS fashion
+    node_data
     
     // // var n_data = node_data[n_curr.dpid];
     // var n_curr = members[0];
@@ -687,5 +714,5 @@ function stopLocal() {
 }
 
 var offlineLoop = 'none';
-// initLocal(); // for offline testing
-main();    // for server
+initLocal(); // for offline testing
+// main();    // for server
