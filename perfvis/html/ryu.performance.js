@@ -54,7 +54,16 @@ var dpid_exists = function(dpid) { /* TODO: move this to inside pf_data.. unless
 var pf_data = {
     node_data: {}, 
     live_data: {},
+    exponSmoothing: false,
+    alpha: 0.5, // for exponential smoothing
     controller: {'placeholder':true},
+    setExponSmoothing: function(on,alpha) {
+      if (on) {
+          this.exponSmoothing = true;
+          if (alpha < 1 && alpha > 0) this.alpha = alpha; // otwise leave it alone
+      }
+      else this.exponSmoothing = false;
+    },
     new_node: function(dpid,pnf,queue_capacity,is_real_node) { /* Creates node and adds it to this.nodes */
       var node = {
         'dpid': dpid,
@@ -195,7 +204,18 @@ var pf_data = {
                 rate_out.push({'port_no':port.port_no,'proportion':port.depart_rate});
               }
             }
-            live.aggregate.arrival_rate = total_in;
+            
+            /* TODO: add exponential smoothing to the aggregate values */
+            if (this.exponSmoothing) {
+              console.log(live.aggregate.arrival_rate);
+              var prev_total_in = live.aggregate.arrival_rate; // if first node, allow to ramp up slowly
+              var current_total_in = total_in*this.alpha + prev_total_in*(1-this.alpha);
+              console.log(current_total_in);
+              live.aggregate.arrival_rate = current_total_in;
+            }
+            else {
+              live.aggregate.arrival_rate = total_in;
+            }
             live.aggregate.depart_rate = total_out;
             live.proportion_in = [];
             live.proportion_out = [];
@@ -461,7 +481,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
   },
   adjust_traffic: function(arrival_rate_delta, proportion_fn, pf_data) {
     // var node_data = pf_data.node_data;
-    pf_data.clearAdjustments();
+    // pf_data.clearAdjustments();
     
     var debug = false;
     var deltas = [];
@@ -604,13 +624,52 @@ var graphing = {
     
     // console.log(JSON.stringify(graph_data,null,2));
     
-    return zipGraphData(graph_data);
+    return this.zipGraphData(graph_data);
   },
   update_graphs: function (pf_out, model_data) {
     var data = this.get_graph_data(pf_out, model_data);
     for(var i = 0; i<this.graphs.length; i++) {
       update_graph(this.graphs[i],data[i].data);
     }
+  },
+  zipGraphData: function(g_in) { // zips up data, returning an object for each graph
+    /*    getGraphData_input = {
+        y_labels : ['label_a','label_b'],
+        editable : [true,false],
+        dpids    : [''],
+        series : {
+            // How to include the altered input? Should create a stacked graph first
+            // label_a = [value: alt_value:,] ?
+            label_a = [value:,],
+            label_b = [value:,],
+            ...
+          },
+        }
+    */
+    
+    // console.log(JSON.stringify(g_in,null,2));
+    
+    var zipped = [];
+    var series = [];
+    for (var l = 0; l<g_in.y_labels.length; l++) {
+        series[l] = [];
+    }
+    for (var dp = 0; dp<g_in.dpids.length ; dp++) {
+        for (var l = 0; l<g_in.y_labels.length; l++) {
+            series[l].push({
+                dpid: g_in.dpids[dp],
+                value: g_in.series[g_in.y_labels[l]][dp],
+            });
+        }
+    }
+    for (var l = 0; l<g_in.y_labels.length; l++) {
+        zipped.push ({
+            label: g_in.y_labels[l],
+            data: series[l],
+            editable: g_in.editable[l],
+        });
+    }
+    return zipped;
   },
 }
 

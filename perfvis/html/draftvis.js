@@ -72,6 +72,22 @@ var setControlPanelListeners = function() {
     });
 }
 
+var vis_clearAdjustments = function() {
+  console.log('clearing adjustments in gui');
+  pf_data.clearAdjustments();
+  populateDPSpecs(dpid);
+}
+
+var smoothing = '';
+var vis_setExponSmoothing = function() {
+  if (smoothing) {
+    pf_data.setExponSmoothing(false, 100);
+  }
+  else {
+    pf_data.setExponSmoothing(true, 0.5);
+  }
+}
+
 $(document).ready(function() {
     var select = $('#node-select')
     select.change(function() {
@@ -86,6 +102,7 @@ $(document).ready(function() {
         $('#specs').show();
     });
     setControlPanelListeners();
+    var smoothing = pf_data.exponSmoothing;
 });
 
 var set_gui_text = function (e, toponodes) {
@@ -95,16 +112,16 @@ var set_gui_text = function (e, toponodes) {
         .attr("class","stats"); // this is where the interactivity will be added
         
     statEnter.append("text").attr("class","dpid")
-        .attr("x",30).attr("y",-35).text(function(d) {return "dpid:"+dpid_to_int(d.dpid);});
+        .attr("x",20).attr("y",-40).text(function(d) {return "dpid:"+dpid_to_int(d.dpid);});
         
     var default_val = ".";
         
     statEnter.append("text").attr("class","lambda")
-        .attr("x",30).attr("y",-20).text(LAM+": "+default_val);
+        .attr("x",25).attr("y",-25).text(LAM+": "+default_val);
     statEnter.append("text").attr("class","mu")
-        .attr("x",90).attr("y",-20).text(MU+": "+default_val);
+        .attr("x",85).attr("y",-25).text(MU+": "+default_val);
     statEnter.append("text").attr("class","capacity")
-        .attr("x",30).attr("y",-20).text("capacity: "+default_val);
+        .attr("x",25).attr("y",-10).text("capacity: "+default_val);
         
     // statEnter.append("text").attr("class","rx")
         // .attr("x",30).attr("y",10).text("Rx:  "+default_val);
@@ -112,11 +129,11 @@ var set_gui_text = function (e, toponodes) {
         // .attr("x",90).attr("y",10).text("Total:  "+default_val);
         
     statEnter.append("text").attr("class","sojourn")
-        .attr("x",30).attr("y",10).text("sojourn: "+default_val);
+        .attr("x",25).attr("y",10).text("sojourn: "+default_val);
     statEnter.append("text").attr("class","load")
-        .attr("x",30).attr("y",25).text("load: "+default_val);
+        .attr("x",25).attr("y",25).text("load: "+default_val);
     statEnter.append("text").attr("class","bufflen")
-        .attr("x",30).attr("y",40).text("length: "+default_val);
+        .attr("x",25).attr("y",40).text("length: "+default_val);
         
 }
 
@@ -129,12 +146,22 @@ var update_gui_text = function (in_data, out_data) {
     elem.stats.selectAll(".mu").text(    function(d) { 
         var o = in_data[d.dpid].service_rate;
         return MU+":         "+(o.live+o.adjustment).toFixed(2); });
+    elem.stats.selectAll(".capacity").text(    function(d) { 
+        var o = in_data[d.dpid].queue_capacity;
+        return "capacity:         "+(o.live+o.adjustment).toFixed(0); });
     elem.stats.selectAll(".sojourn").text(    function(d) { 
         return "sojourn: "+out_data[d.dpid].sojourn.toFixed(4); });
-    elem.stats.selectAll(".load").text(    function(d) { 
+    elem.stats.selectAll(".load") .text(    function(d) { 
         return "load:        "+out_data[d.dpid].load.toFixed(4); });
     elem.stats.selectAll(".bufflen").text(    function(d) { 
         return "length:    "+out_data[d.dpid].length.toFixed(4); });
+    elem.node.selectAll('.switch-circle').attr( 'fill', function(d) {
+      var dpid = d.dpid;
+      if (out_data[dpid].load >= 1) {
+        return 'red';
+      }
+      return 'white';
+    }); 
 }
 
 var graphs = {};
@@ -168,6 +195,7 @@ var get_graph = function(yLabel) {
     svg.append('g')
         .attr('class', 'y-axis')
         .call(yAxis)
+        
     svg.append('text')
         // .attr('transform','rotate(-90)')
         .attr('transform','translate(0,-15)')
@@ -223,7 +251,24 @@ var update_graph = function(graph, data) {
     });
     
     graph.x.domain(data.map(function(d) { return d.dpid; }));
-    graph.y.domain([0, d3.max(data, function(d) { return d.total; })]);
+    if (graph.label === 'load') {  
+      graph.y.domain([0, 1]);
+    }
+    else if (graph.label === 'service_rate') {  
+      // console.log('load');
+      graph.y.domain([0.1, 100000]);
+    }
+    else if (graph.label === 'arrival_rate') {  
+      // graph.y.d3.scale.log().range([graphs.height, 0]);
+      // console.log('load');
+      graph.y.domain([0, 50000]);
+    }
+    else if (graph.label === 'sojourn') {  
+      // graph.y.d3.scale.log().range([graphs.height, 0]);
+      // console.log('load');
+      graph.y.domain([0, 0.0002]);
+    }
+    else graph.y.domain([0, d3.max(data, function(d) { return d.total; })]);
     
     
     /* Live and model data */
@@ -250,46 +295,6 @@ var update_graph = function(graph, data) {
         // .attr("transform", function(d) { if(d.name === 'adjustment_neg') return 'translate(3,0)'; return 'translate(0,0)'})
         .style("fill", function(d) { return graph.color(d.name); });
 
-}
-
-var zipGraphData = function(g_in) { // zips up data, returning an object for each graph
-    /*    getGraphData_input = {
-        y_labels : ['label_a','label_b'],
-        editable : [true,false],
-        dpids    : [''],
-        series : {
-            // How to include the altered input? Should create a stacked graph first
-            // label_a = [value: alt_value:,] ?
-            label_a = [value:,],
-            label_b = [value:,],
-            ...
-          },
-        }
-    */
-    
-    // console.log(JSON.stringify(g_in,null,2));
-    
-    var zipped = [];
-    var series = [];
-    for (var l = 0; l<g_in.y_labels.length; l++) {
-        series[l] = [];
-    }
-    for (var dp = 0; dp<g_in.dpids.length ; dp++) {
-        for (var l = 0; l<g_in.y_labels.length; l++) {
-            series[l].push({
-                dpid: g_in.dpids[dp],
-                value: g_in.series[g_in.y_labels[l]][dp],
-            });
-        }
-    }
-    for (var l = 0; l<g_in.y_labels.length; l++) {
-        zipped.push ({
-            label: g_in.y_labels[l],
-            data: series[l],
-            editable: g_in.editable[l],
-        });
-    }
-    return zipped;
 }
 
 // bar chart: http://bl.ocks.org/mbostock/3885304

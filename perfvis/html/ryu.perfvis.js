@@ -103,6 +103,7 @@ elem.update = function () {
         .on("dblclick", function(d) { d3.select(this).classed("fixed", d.fixed = false); })
         .call(this.drag);
     nodeEnter.append("circle")
+        .attr("class","switch-circle")
         .attr("cx", -CONF.node.size/2)
         .attr("cy", -CONF.node.size/2)
         .attr("r", CONF.node.size)
