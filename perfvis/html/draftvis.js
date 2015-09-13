@@ -88,6 +88,38 @@ $(document).ready(function() {
     setControlPanelListeners();
 });
 
+var set_gui_text = function (e, toponodes) {
+    e.stats = e.stats.data(toponodes);
+    e.stats.exit().remove(); // makes stats disappear with the topology
+    var statEnter = e.stats.enter().append("g")
+        .attr("class","stats"); // this is where the interactivity will be added
+        
+    statEnter.append("text").attr("class","dpid")
+        .attr("x",30).attr("y",-35).text(function(d) {return "dpid:"+dpid_to_int(d.dpid);});
+        
+    var default_val = ".";
+        
+    statEnter.append("text").attr("class","lambda")
+        .attr("x",30).attr("y",-20).text(LAM+": "+default_val);
+    statEnter.append("text").attr("class","mu")
+        .attr("x",90).attr("y",-20).text(MU+": "+default_val);
+    statEnter.append("text").attr("class","capacity")
+        .attr("x",30).attr("y",-20).text("capacity: "+default_val);
+        
+    // statEnter.append("text").attr("class","rx")
+        // .attr("x",30).attr("y",10).text("Rx:  "+default_val);
+    // statEnter.append("text").attr("class","total")
+        // .attr("x",90).attr("y",10).text("Total:  "+default_val);
+        
+    statEnter.append("text").attr("class","sojourn")
+        .attr("x",30).attr("y",10).text("sojourn: "+default_val);
+    statEnter.append("text").attr("class","load")
+        .attr("x",30).attr("y",25).text("load: "+default_val);
+    statEnter.append("text").attr("class","bufflen")
+        .attr("x",30).attr("y",40).text("length: "+default_val);
+        
+}
+
 var update_gui_text = function (in_data, out_data) {
     elem.stats.selectAll(".dpid").text(    function(d) {
         return "dpid:        "+dpid_to_int(d.dpid); });
@@ -108,20 +140,19 @@ var update_gui_text = function (in_data, out_data) {
 var graphs = {};
 graphs.w_border    = 300;
 graphs.h_border    = 250;
-graphs.margin    = {top: 20, right: 20, bottom: 30, left: 40};
+graphs.margin    = {top: 15, right: 20, bottom: 15, left: 40};
 graphs.width     = 300 - graphs.margin.left - graphs.margin.right;
-graphs.height    = 250 - graphs.margin.top - graphs.margin.bottom;
+graphs.height    = 100 - graphs.margin.top - graphs.margin.bottom;
 
 var get_graph = function(yLabel) {
     var x = d3.scale.ordinal().rangeRoundBands([0, graphs.width], .1);
     var y = d3.scale.linear().range([graphs.height, 0]);
     var xAxis = d3.svg.axis().scale(x).orient("bottom");
-    var yAxis = d3.svg.axis().scale(y).orient("left").ticks(10);
+    var yAxis = d3.svg.axis().scale(y).orient("left").ticks(5);
     
     
     var color = d3.scale.ordinal()
         .range(["SteelBlue","YellowGreen", "OrangeRed"]);
-    
     
     var svg = d3.select('#graph-panel').append('svg')
         .attr('width', graphs.width + graphs.margin.left + graphs.margin.right)
@@ -137,11 +168,13 @@ var get_graph = function(yLabel) {
     svg.append('g')
         .attr('class', 'y-axis')
         .call(yAxis)
-      .append('text')
-        .attr('transform','rotate(-90)')
+    svg.append('text')
+        // .attr('transform','rotate(-90)')
+        .attr('transform','translate(0,-15)')
         .attr('y',0) // distance of rotated label from axis
         .attr('dy', '.71em') // similar to previous..? fine tuning?
-        .style('text-anchor', 'end') // places at end of axis, rather than ages away
+        // .style('text-anchor', 'end') // places at end of axis, rather than ages away
+        .style('font-size','15px')
         .text(yLabel);
             
     return {'svg':svg,'x':x,'y':y,'label':yLabel,'color':color}; // the graph

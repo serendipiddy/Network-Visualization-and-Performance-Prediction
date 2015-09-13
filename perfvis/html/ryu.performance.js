@@ -43,7 +43,7 @@ ws.onmessage = function(event) {
     this.send(JSON.stringify(ret));
 }
 
-var dpid_exists = function(dpid) {
+var dpid_exists = function(dpid) { /* TODO: move this to inside pf_data.. unless it really it a vital function.. */
   if (!(pf_data.node_data.hasOwnProperty(dpid))) {
     console.log("unknown dpid: "+dpid);
     return false;
@@ -713,5 +713,5 @@ function stopLocal() {
 }
 
 var offlineLoop = 'none';
-// initLocal(); // for offline testing,omgoodness this really upsets the server if left on..
-main();    // for server
+initLocal(); // for offline testing,omgoodness this really upsets the server if left on..
+// main();    // for server

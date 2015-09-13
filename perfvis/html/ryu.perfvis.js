@@ -132,32 +132,7 @@ elem.update = function () {
     */
     
     /* Statistics */
-    this.stats = this.stats.data(topo.nodes);
-    this.stats.exit().remove(); // makes stats disappear with the topology
-    var statEnter = this.stats.enter().append("g")
-        .attr("class","stats"); // this is where the interactivity will be added
-        
-    statEnter.append("text").attr("class","dpid")
-        .attr("x",30).attr("y",-20).text(function(d) {return "dpid:"+dpid_to_int(d.dpid);});
-        
-    var default_val = ".";
-        
-    statEnter.append("text").attr("class","lambda")
-        .attr("x",30).attr("y",-5).text(LAM+": "+default_val);
-    statEnter.append("text").attr("class","mu")
-        .attr("x",90).attr("y",-5).text(MU+": "+default_val);
-        
-    // statEnter.append("text").attr("class","rx")
-        // .attr("x",30).attr("y",10).text("Rx:  "+default_val);
-    // statEnter.append("text").attr("class","total")
-        // .attr("x",90).attr("y",10).text("Total:  "+default_val);
-        
-    statEnter.append("text").attr("class","sojourn")
-        .attr("x",30).attr("y",10).text("sojourn: "+default_val);
-    statEnter.append("text").attr("class","load")
-        .attr("x",30).attr("y",25).text("load: "+default_val);
-    statEnter.append("text").attr("class","bufflen")
-        .attr("x",30).attr("y",40).text("length: "+default_val);
+    set_gui_text(this, topo.nodes);
         
     /* Ports */
     var ports = topo.get_ports();
