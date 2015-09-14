@@ -218,6 +218,9 @@ var update_graph = function(graph, data) {
     graph.color.domain(['live','adjustment_pos','adjustment_neg']);
     data.forEach(function(d) {
         var y0 = 0;
+        if (typeof d.value==='undefined') { // Zero graphs for values not output by some node's model
+          d.value = {'live':0, 'adjustment':0};
+        }
         var adj = d.value.hasOwnProperty('adjustment');
         d.value = ['live','adjustment'].map(
             function(name) {  
@@ -267,6 +270,11 @@ var update_graph = function(graph, data) {
       // graph.y.d3.scale.log().range([graphs.height, 0]);
       // console.log('load');
       graph.y.domain([0, 0.0002]);
+    }
+    else if (graph.label === 'packet_loss') {  
+      // graph.y.d3.scale.log().range([graphs.height, 0]);
+      // console.log('load');
+      graph.y.domain([0, 10]);
     }
     else graph.y.domain([0, d3.max(data, function(d) { return d.total; })]);
     

@@ -38,6 +38,9 @@ var mm1k_basic = {
   },
   lam_eff: function() {
     return this.lam * (1 - this.pij(this.k));
+  },
+  packet_loss: function() {
+    return pij(this.k * this.lam);
   }
 }
 

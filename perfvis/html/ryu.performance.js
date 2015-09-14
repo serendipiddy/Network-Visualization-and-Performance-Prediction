@@ -363,10 +363,11 @@ var model = {
       
       var results = {};
       /* Construct results from configuration */
-      for (var i = 0; i < model_config.model_out.length; i++) {
-          fn = model_config.model_out[i]; // get function defined in model
+      for (var parameter = 0; parameter < model_config.model_out.length; parameter++) {
+          fn = model_config.model_out[parameter]; // get function defined in model
           results[fn] = model[fn]();
       }
+      console.log(JSON.stringify(results));
       
       return results;
     }
@@ -674,7 +675,7 @@ var graphing = {
 }
 
 /* Select the data to graph */
-graphing.create_graphs(['service_rate', 'arrival_rate', 'queue_capacity'],['load','sojourn']);
+graphing.create_graphs(['service_rate', 'arrival_rate', 'queue_capacity'],['load','sojourn','packet_loss']);
 // graphing.create_graphs(['arrival_rate'],[]);
 
 var update_gui = function () { /* Updates the displayed performance values */
@@ -772,5 +773,5 @@ function stopLocal() {
 }
 
 var offlineLoop = 'none';
-// initLocal(); // for offline testing,omgoodness this really upsets the server if left on..
-main();    // for server
+initLocal(); // for offline testing,omgoodness this really upsets the server if left on..
+// main();    // for server
