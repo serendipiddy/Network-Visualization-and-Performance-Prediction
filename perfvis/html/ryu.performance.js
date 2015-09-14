@@ -772,5 +772,5 @@ function stopLocal() {
 }
 
 var offlineLoop = 'none';
-initLocal(); // for offline testing,omgoodness this really upsets the server if left on..
-// main();    // for server
+// initLocal(); // for offline testing,omgoodness this really upsets the server if left on..
+main();    // for server
