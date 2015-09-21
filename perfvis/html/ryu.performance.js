@@ -28,6 +28,9 @@ ws.onmessage = function(event) {
         $('#control-panel').hide();
         $('#loading').show();
       }
+      else if (new_data.method === 'event_update_controller') {
+        // null
+      }
       else {
         console.log('successful update');
         /* enable control panel */
@@ -56,7 +59,10 @@ var pf_data = {
     live_data: {},
     exponSmoothing: false,
     alpha: 0.5, // for exponential smoothing
-    controller: {'placeholder':true},
+    controller: {
+      'data':'',
+      'live':''
+    },
     setExponSmoothing: function(on,alpha) {
       if (on) {
           this.exponSmoothing = true;
@@ -234,6 +240,10 @@ var pf_data = {
         }
         
         /* TODO: add another object for the controller */
+    },
+    event_update_controller: function (toponodes, update) {
+        console.log('controller stats received');
+        // console.log(JSON.stringify(update));
     },
     set_adjustment: function(dpid, attr, value) {
       if (!dpid_exists) {

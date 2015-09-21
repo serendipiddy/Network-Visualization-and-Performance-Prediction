@@ -40,7 +40,7 @@ var mm1k_basic = {
     return this.lam * (1 - this.pij(this.k));
   },
   packet_loss: function() {
-    return pij(this.k * this.lam);
+    return this.pij(this.k * this.lam);
   }
 }
 

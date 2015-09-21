@@ -18,6 +18,11 @@ var config = {
           'service_variance': 0,
         },
   },
+  'controller': {
+    'ryu-mininet': {
+        'service_rate': 593.47
+    }
+  },
   'queueing_models': {
     /* each model is stored in 'model/name.js' */
     'mm1_basic':  { 

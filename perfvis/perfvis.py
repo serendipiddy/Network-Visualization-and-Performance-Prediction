@@ -46,6 +46,7 @@ class PerformanceServerApp(app_manager.RyuApp):
         self.statstype = 'port'          # 'port' or 'flow', depending on the desired statistics
         self.dp_packet_in = {} # {dpid:, count:}
         self.total_packet_in = 0
+        self.prev_packet_in = 0
 
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -88,9 +89,10 @@ class PerformanceServerApp(app_manager.RyuApp):
             if self.datapaths.values():
                 self.req_count += 1
                 # print("Counted %d datapaths. Request #%d sent" % (count, self.req_count))
-                sys.stdout.write('Counted %d datapaths. Request #%d sent    \r' % (count, self.req_count))
+                sys.stdout.write('Counted %d datapaths. Request #%d sent. Packet_in: %d    \r' % (count, self.req_count, self.total_packet_in))
                 sys.stdout.flush();
             hub.sleep(self.waittime)
+            self.rpc_broadcall('event_update_controller',self.controller_stats())
             self.rpc_broadcall('event_update_statistics',self.currentstats)
 
 
@@ -155,9 +157,13 @@ class PerformanceServerApp(app_manager.RyuApp):
         self.prevreadings[dp] = current_flows['flows']
         self.currentstats[dp] = current_stats
         
-        
-    # Controller statistics monitoring
-        
+    ##  
+    ## Controller statistics monitoring
+    ##
+    ## Uses 
+    ##   * self.dp_packet_in = {}
+    ##   * self.total_packet_in = int
+    ##
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
         dp = ev.msg.datapath
@@ -172,17 +178,38 @@ class PerformanceServerApp(app_manager.RyuApp):
             self.dp_packet_in[dp.id] = 1 + self.dp_packet_in[dp.id]
         else:
             self.dp_packet_in[dp.id] = 1
-        print ('dpid: %d, %d total: %d' % (dp.id, self.dp_packet_in[dp.id], self.total_packet_in))
+        # print ('dpid: %d, %d total: %d' % (dp.id, self.dp_packet_in[dp.id], self.total_packet_in))
       
-    def get_total_packet_in(self):
-        return self.total_packet_in
-      
-    def get_dp_proportions(self, dp='all'):
+    def get_ctrl_switches(self, dp='all'):
+        switches = []
         if dp == 'all':
-            return self.dp_packet_in
+            for switch in self.dp_packet_in:
+              s = {}
+              s['dpid'] = switch
+              s['total_packet_in'] = self.dp_packet_in[switch]
+              switches.append(s)
         else:
-            return self.dp_packet_in[dp]
-
-app_manager.require_app('ryu.app.simple_switch_13') # Causes chaos to ensue
+            s = {}
+            s['dpid'] = dp
+            s['total_packet_in'] = self.dp_packet_in[dp]
+            switches.append(s)
+        return switches
+            
+    def controller_stats(self):
+        rv = {}
+        rv['packet_in_total'] = self.total_packet_in
+        rv['packet_in_delta'] = self.total_packet_in - self.prev_packet_in
+        rv['switches'] = self.get_ctrl_switches()
+        # rv['service_rate'] = '0'
+        
+        self.prev_packet_in = self.total_packet_in
+        
+        # print('controller %d' % (self.total_packet_in))
+        # sys.stdout.write('controller %d      \n' % (self.total_packet_in))
+        # sys.stdout.flush();
+        
+        return rv
+        
+app_manager.require_app('ryu.app.simple_switch_13_lldp')
 app_manager.require_app('ryu.app.rest_topology')
 app_manager.require_app('ryu.app.ws_topology')
