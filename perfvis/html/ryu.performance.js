@@ -367,7 +367,7 @@ var model = {
           fn = model_config.model_out[parameter]; // get function defined in model
           results[fn] = model[fn]();
       }
-      console.log(JSON.stringify(results));
+      // console.log(JSON.stringify(results));
       
       return results;
     }
@@ -773,5 +773,5 @@ function stopLocal() {
 }
 
 var offlineLoop = 'none';
-initLocal(); // for offline testing,omgoodness this really upsets the server if left on..
-// main();    // for server
+// initLocal(); // for offline testing,omgoodness this really upsets the server if left on..
+main();    // for server

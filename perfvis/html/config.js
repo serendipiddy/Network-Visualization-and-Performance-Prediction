@@ -10,7 +10,7 @@ var config = {
           'service_variance': 0,
         },
     'pica8':  {
-          'service_rate':  10000,
+          'service_rate':  106557,
           'service_variance': 0,
         },
     'user_defined': {

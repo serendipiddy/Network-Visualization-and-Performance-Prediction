@@ -259,12 +259,12 @@ var update_graph = function(graph, data) {
     }
     else if (graph.label === 'service_rate') {  
       // console.log('load');
-      graph.y.domain([0.1, 100000]);
+      graph.y.domain([0.1, 110000]);
     }
     else if (graph.label === 'arrival_rate') {  
       // graph.y.d3.scale.log().range([graphs.height, 0]);
       // console.log('load');
-      graph.y.domain([0, 50000]);
+      graph.y.domain([0, 110000]);
     }
     else if (graph.label === 'sojourn') {  
       // graph.y.d3.scale.log().range([graphs.height, 0]);
