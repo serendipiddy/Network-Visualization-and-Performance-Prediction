@@ -3,7 +3,7 @@ from ryu.base import app_manager
 
 from ryu.lib import hub
 from ryu.lib.dpid import dpid_to_str
-from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
+from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER, CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.controller import ofp_event
 
@@ -14,7 +14,6 @@ import sys
 import process_stats_port as process
 import process_stats_flow as processf
 from performance_server import PerformanceServerController
-
 
 # from ryu.topology.api import get_switch, get_link
 # import json
@@ -45,6 +44,8 @@ class PerformanceServerApp(app_manager.RyuApp):
         self.waittime = 1
         self.placeholder = 'loading'
         self.statstype = 'port'          # 'port' or 'flow', depending on the desired statistics
+        self.dp_packet_in = {} # {dpid:, count:}
+        self.total_packet_in = 0
 
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -154,7 +155,34 @@ class PerformanceServerApp(app_manager.RyuApp):
         self.prevreadings[dp] = current_flows['flows']
         self.currentstats[dp] = current_stats
         
+        
+    # Controller statistics monitoring
+        
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+    def switch_features_handler(self, ev):
+        dp = ev.msg.datapath
+        if dp.id not in self.dp_packet_in:
+          self.dp_packet_in[dp.id] = 0
 
-# app_manager.require_app('ryu.app.simple_switch_13') # Causes chaos to ensue
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    def _packet_in_handler(self, ev):
+        dp = ev.msg.datapath
+        self.total_packet_in = 1 + self.total_packet_in
+        if dp.id in self.dp_packet_in:
+            self.dp_packet_in[dp.id] = 1 + self.dp_packet_in[dp.id]
+        else:
+            self.dp_packet_in[dp.id] = 1
+        print ('dpid: %d, %d total: %d' % (dp.id, self.dp_packet_in[dp.id], self.total_packet_in))
+      
+    def get_total_packet_in(self):
+        return self.total_packet_in
+      
+    def get_dp_proportions(self, dp='all'):
+        if dp == 'all':
+            return self.dp_packet_in
+        else:
+            return self.dp_packet_in[dp]
+
+app_manager.require_app('ryu.app.simple_switch_13') # Causes chaos to ensue
 app_manager.require_app('ryu.app.rest_topology')
 app_manager.require_app('ryu.app.ws_topology')

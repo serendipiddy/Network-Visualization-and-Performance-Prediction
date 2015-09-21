@@ -11,30 +11,26 @@ class PacketInCounter():
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
-        super(PacketInCounter, self).__init__(*args, **kwargs)
-        self.mac_to_port = {}
+        # super(PacketInCounter, self).__init__(*args, **kwargs)
         self.dp_packet_in = {} # {dpid:, count:}
         self.total_packet_in = 0
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
         dp = ev.msg.datapath
-        self.total_packet_in = 1 + self.total_packet_in
-        if dp.id in self.dp_packet_in:
-          self.dp_packet_in[dp.id] = 1 + self.dp_packet_in[dp.id]
-        else:
-          self.dp_packet_in[dp.id] = 1
-        
+        if dp.id not in self.dp_packet_in:
+          self.dp_packet_in[dp.id] = 0
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
+      print 'packet in!'
       dp = ev.msg.datapath
       self.total_packet_in = 1 + self.total_packet_in
       if dp.id in self.dp_packet_in:
         self.dp_packet_in[dp.id] = 1 + self.dp_packet_in[dp.id]
       else:
         self.dp_packet_in[dp.id] = 1
-      print ('dpid: %d, %d total:' % (dp.id, self.dp_packet_in[dp.id], self.total_packet_in))
+      print ('dpid: %d, %d total: %d' % (dp.id, self.dp_packet_in[dp.id], self.total_packet_in))
       
     def get_total_packet_in(self):
       return self.total_packet_in
