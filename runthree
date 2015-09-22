@@ -1,0 +1,2 @@
+sudo mn -c
+sudo mn --controller remote  --mac --topo linear,3 --switch ovsk,protocols=OpenFlow13
