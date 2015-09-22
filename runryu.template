@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# set these three before use!
+SRC="/home/mininet/vis" # directory of the visualisation app
+RYU="/home/mininet/ryu" # Root directory of Ryu
+DST=$RYU"/ryu/app/" # Ryu app directory
+
+echo 'Copying from '$SRC' to '$DST
+cp -r $SRC/perfvis $DST
+cp $SRC/simple_switch_13_lldp.py $DST
+
+echo 'Running '$RYU'/ryu-mananger'
+PYTHONPATH=$RYU $RYU/bin/ryu-manager --observe-links $RYU/ryu/app/perfvis/perfvis.py
