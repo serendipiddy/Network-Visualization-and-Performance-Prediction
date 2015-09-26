@@ -5,11 +5,22 @@
 <link rel="stylesheet" type="text/css" href="./ryu.topology.css">
 <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script src="./current.js" charset="utf-8"></script>
+<style>
+  .node-stats {
+    float:left;
+    border: 1px solid #000;
+    margin: 2px;
+    padding: 2px;
+  }
+  pre {
+    font-size: 12px;
+  }
+</style>
 </head>
 <body>
 <h1>Current Stats</h1>
-<button onclick="button()">Show Stats</button>
-<pre id='stats'></pre>
+<!-- <button onclick="button()">Show Stats</button> -->
+<div id='stats-panel'></div>
 </body>
 </html>
  
