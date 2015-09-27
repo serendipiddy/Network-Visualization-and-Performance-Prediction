@@ -14,6 +14,14 @@ The script runryu, when edited to point to the correct directories, will copy th
 
 Once running, it can be accessed via a browser, http://[controller-ip]:8080.
 
+IMPORTANT -- There are two modes of operation, one using a live network, and another which can be run locally without a network using randomly generated input values. This is determined at the base of the perfvis/perfvis.py file.
+```
+/* Control for swapping between local and server modes. Comment one. */
+// initLocal(); // for offline testing
+main();    // for server
+```
+Swap which of the two lines is commented for the local version, which can be accessed using a webserver on localhost targeting the html directory, such as Python3's module http.server.
+
 ## Config
 Models and the switch brand are declared in perfvis/html/config.js
 
