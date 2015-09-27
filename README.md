@@ -14,13 +14,13 @@ The script ./runryu, when edited to point to the correct directories, will copy 
 
 Once running, it can be accessed via a browser, http://[controller-ip]:8080.
 
-So the correct way to run this is to edit the SRC, DST and RYU variables in runryu, then run it:
+So the easiest way to run this is to edit the SRC, DST and RYU variables in runryu, then start it:
 ```bash
  > ./runryu
 ```
-Which will copy the appropriate and start ryu-manager as above.
+Which will copy the appropriate files and start ryu-manager as above.
 
-IMPORTANT -- There are two modes of operation, one using a live network, and another which can be run locally without a network using randomly generated input values. This is determined at the base of the perfvis/perfvis.py file.
+IMPORTANT -- There are two modes of operation, one using a live network, and another which can be run locally without a network using randomly generated input values. This is determined at the end of the perfvis/html/ryu/performance.js file. If the application appears to be running incorrectly check that this is set properly.
 ```
 /* Control for swapping between local and server modes. Comment one. */
 // initLocal();    // for offline testing
