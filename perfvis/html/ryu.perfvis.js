@@ -343,6 +343,6 @@ function initialize_topology() {
     });
 }
 
-function initServer() { // main() from ryu.topology.js
+function initServer() { // 'main()' from ryu.topology.js
     initialize_topology();
 }
