@@ -10,11 +10,17 @@ This is a Ryu application, so simply needs to be copied into the ryu/app directo
 ```bash
 ryu-manager --observe-links ryu/app/perfvis/perfvis.py
 ```
-The script runryu, when edited to point to the correct directories, will copy this application and run it. Scripts are also included to set up a mininet session running OpenFlow v1.3, runsingle and runtopo.
+The script ./runryu, when edited to point to the correct directories, will copy this application and run it correctly. Scripts are also included to set up a mininet session running OpenFlow v1.3, runsingle and runtopo.
 
 Once running, it can be accessed via a browser, http://[controller-ip]:8080.
 
-IMPORTANT -- There are two modes of operation, one using a live network, and another which can be run locally without a network using randomly generated input values. This is determined at the base of the perfvis/perfvis.py file.
+So the easiest way to run this is to edit the SRC, DST and RYU variables in runryu, then start it:
+```bash
+ > ./runryu
+```
+Which will copy the appropriate files and start ryu-manager as above.
+
+IMPORTANT -- There are two modes of operation, one using a live network, and another which can be run locally without a network using randomly generated input values. This is determined at the end of the perfvis/html/ryu/performance.js file. If the application appears to be running incorrectly check that this is set properly.
 ```
 /* Control for swapping between local and server modes. Comment one. */
 // initLocal();    // for offline testing
