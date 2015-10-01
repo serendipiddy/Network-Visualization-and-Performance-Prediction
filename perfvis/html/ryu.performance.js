@@ -336,9 +336,6 @@ var pf_data = {
 }
 
 var model = {
-    calculate_chains: function() {
-      
-    },
     get_output_dpid: function(dpid,input) {
       var model = pf_data.node_data[dpid].queueing_model;
       if (config.queueing_models[model]) {
@@ -568,7 +565,7 @@ var graphing = {
   graphs: [],
   pf_labels: [],
   model_labels: [],
-  create_graphs: function(pf_labels,model_labels){
+  create_graphs: function(pf_labels, model_labels){
     this.graphs = [];
     this.pf_labels = [];
     this.model_labels = [];
@@ -763,9 +760,7 @@ function initLocal() {
         for (var i = 0; i< sample.data[dpid].length; i++) {
           sample.data[dpid][i].arrival_rate = Math.round(Math.random() * 9500) + 500;
           sample.data[dpid][i].uptime+=2;
-        }
-      }
-    };
+    }} };
     
       
     offlineLoop = setInterval(function(s) {
