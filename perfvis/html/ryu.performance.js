@@ -708,12 +708,12 @@ var update_gui = function () { /* Updates the displayed performance values */
 var sample = {
   data: {
     "0000000000000001": [
-      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.1, "depart_rate": 101.1, "total_rx": 100, "total_rx": 100},
-      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.2, "depart_rate": 101.2, "total_rx": 100, "total_rx": 100},
+      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.1, "depart_rate": 101.1, "total_rx": 100, "total_rx": 100, "uptime": 0},
+      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.2, "depart_rate": 101.2, "total_rx": 100, "total_rx": 100, "uptime": 0},
     ],
     "0000000000000002": [
-      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.1, "depart_rate": 201.1, "total_rx": 100, "total_rx": 100},
-      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_rx": 100, "total_rx": 100},
+      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.1, "depart_rate": 201.1, "total_rx": 100, "total_rx": 100, "uptime": 0},
+      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_rx": 100, "total_rx": 100, "uptime": 0},
     ]
   },
   switches: [
@@ -762,6 +762,7 @@ function initLocal() {
       for (dpid in sample.data) {
         for (var i = 0; i< sample.data[dpid].length; i++) {
           sample.data[dpid][i].arrival_rate = Math.round(Math.random() * 9500) + 500;
+          sample.data[dpid][i].uptime+=2;
         }
       }
     };
@@ -774,7 +775,6 @@ function initLocal() {
       $('#loading').hide();
       $('#control-panel').show();
       update_gui();
-      
     }, 2000);
 }
 
@@ -784,5 +784,5 @@ function stopLocal() {
 
 var offlineLoop = 'none';
 /* Control for swapping between local and server modes. Comment one. */
-// initLocal();    // for offline testing, omgoodness this really upsets the server if left on when running server mode..
-initServer();   // for server
+initLocal();    // for offline testing, omgoodness this really upsets the server if left on when running server mode..
+// initServer();   // for server

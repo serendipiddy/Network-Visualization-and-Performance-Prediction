@@ -106,6 +106,7 @@ def avg_rates(current, previous, placeholder):
         
         port_stats['total_rx'] = p['rx_packets']
         port_stats['total_tx'] = p['tx_packets']
+        port_stats['uptime'] = p['duration_sec']
         
         dp_stats.append(port_stats)
     
