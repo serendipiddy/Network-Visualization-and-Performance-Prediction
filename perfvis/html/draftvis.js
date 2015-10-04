@@ -46,7 +46,8 @@ var setControlPanelListeners = function() {
     $('#arrival-rate').change(function() {
         var dpid = $('#node-select').val();
         // pf_data.set_adjustment(dpid, 'arrival_rate', $('#arrival-rate').val());
-        spanningtree.adjust_traffic($('#arrival-rate').val(),spanningtree[$('#select-cascade :selected').attr('val')],pf_data);
+        var alg = $('#select-cascade :selected').attr('val');
+        spanningtree.adjust_traffic($('#arrival-rate').val(), spanningtree[alg],pf_data);
         console.log('adjusted arrival');
         populateDPSpecs(dpid);
     });
@@ -66,9 +67,12 @@ var setControlPanelListeners = function() {
         populateDPSpecs(dpid);
     });
     $('#select-cascade').change(function() {
+        var dpid = $('#node-select').val();
         var alg = $('#select-cascade :selected').attr('val');
-        spanningtree.adjust_traffic($('#arrival-rate').val(),spanningtree[alg],pf_data);
+        spanningtree.adjust_traffic($('#arrival-rate').val(), spanningtree[alg],pf_data);
         console.log('changed cascade to '+alg);
+        console.log('populateDPspecs: '+dpid);
+        populateDPSpecs(dpid);
     });
 }
 

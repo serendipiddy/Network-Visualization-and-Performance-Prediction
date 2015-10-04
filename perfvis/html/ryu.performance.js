@@ -11,6 +11,7 @@ var OFPorts = {
 }
 
 var NOT_READY = -1;
+var edit_mode_active = false;
 
 /* For receiving performance information */
 var ws = new WebSocket("ws://" + location.host + "/v1.0/performance/ws");
@@ -18,6 +19,12 @@ ws.onmessage = function(event) {
     // Process the data received
     var new_data = JSON.parse(event.data);
     // console.log(JSON.stringify(new_data),null,2);
+    
+    if (edit_mode_active) {
+      var ret = {"id": new_data.id, "jsonrpc": "2.0", "result": ""};
+      this.send(JSON.stringify(ret));
+      return;
+    }
     
     // create and send RPC reply
     var result = "";
@@ -66,7 +73,7 @@ var pf_data = {
     setExponSmoothing: function(on,alpha) {
       if (on) {
           this.exponSmoothing = true;
-          if (alpha < 1 && alpha > 0) this.alpha = alpha; // otwise leave it alone
+          if (alpha < 1 && alpha > 0) this.alpha = alpha; // otherwise leave it alone
       }
       else this.exponSmoothing = false;
     },
@@ -75,7 +82,7 @@ var pf_data = {
         'dpid': dpid,
         'switch_brand':   config.switch_default,   /* default now, set through UI */ 
         'queueing_model': config.model_default, /* default now, set through UI */ 
-        'node_status': (is_real_node ? 'active':'additional'),    /* default setting */
+        'node_status': (is_real_node ? 'active':'extra'),    /* default setting */
         // 'configuration': {
         'service_rate': config.switch_configs[config.switch_default].service_rate, 
         'pnf':            pnf,
@@ -122,7 +129,7 @@ var pf_data = {
         }
         
         /* Create this.stats_nodes */
-        for (dpid in update) { 
+        for (var dpid in update) { 
             /* Doesn't exist, make it */
             if (!this.node_data[dpid]) {
               var new_node = this.new_node(dpid,0,100,true);
@@ -283,7 +290,7 @@ var pf_data = {
       }
     },
     get_model_input_dpid: function(dpid) {
-      if (dpid_exists) {
+      if (dpid_exists(dpid)) {
         var ret = {
           'service_rate': this.node_data[dpid].service_rate + this.node_data[dpid].adjustments.service_rate,
           'arrival_rate': this.live_data[dpid].aggregate.arrival_rate + this.node_data[dpid].adjustments.arrival_rate,
@@ -298,7 +305,7 @@ var pf_data = {
     },
     get_gui_input_all: function() {
       var all_data = {};
-      for(dpid in this.node_data) {
+      for(var dpid in this.node_data) {
         if (dpid_exists(dpid)) {
           var ret = {
             'service_rate': {'live':this.node_data[dpid].service_rate,'adjustment':this.node_data[dpid].adjustments.service_rate},
@@ -306,7 +313,7 @@ var pf_data = {
             'queue_capacity': {'live':this.node_data[dpid].queue_capacity, 'adjustment': this.node_data[dpid].adjustments.queue_capacity}
           }
           /* make sure alterations don't go below 0 */
-          for(a in ret) {
+          for(var a in ret) {
             if ((ret[a].live + ret[a].adjustment) < 0) ret[a].adjustment = 0-ret[a].live;}
           all_data[dpid] = ret;
         }
@@ -315,13 +322,13 @@ var pf_data = {
     },
     get_model_input_all: function() {
       var all_data = {};
-      for(dpid in this.node_data) {
+      for(var dpid in this.node_data) {
         all_data[dpid] = this.get_model_input_dpid(dpid);
       }
       return all_data;
     },
     clearAdjustments: function() {
-      for (dpid in this.node_data) {
+      for (var dpid in this.node_data) {
         if (dpid_exists(dpid)) {
           this.node_data[dpid].adjustments = {
             'service_rate':   0,
@@ -335,6 +342,24 @@ var pf_data = {
     }
 }
 
+var edit_mode = {
+    saved_pf_data: '',
+    saved_topo_data: '',
+    enter: function(pf_data,toponodes) {
+      // stop updates
+      // clone and store the data
+      this.saved_pf_data   = jQuery.extend(true,{}, pf_data);
+      this.saved_topo_data = jQuery.extend(true,{}, toponodes);
+    },
+    add_switch: function(new_switch) {
+      // add to pf_data
+      // add to 
+    },
+    remove_switch: function(dpid) {
+      
+    },
+}
+
 var model = {
     get_output_dpid: function(dpid,input) {
       var model = pf_data.node_data[dpid].queueing_model;
@@ -345,7 +370,7 @@ var model = {
     },
     get_output_all: function() {
       var all_data = {};
-      for (dpid in pf_data.node_data) {
+      for (var dpid in pf_data.node_data) {
         all_data[dpid] = this.get_output_dpid(dpid);
       }
       return all_data;
@@ -488,8 +513,6 @@ var spanningtree = { /* A directed, rooted spanning tree */
     }
   },
   adjust_traffic: function(arrival_rate_delta, proportion_fn, pf_data) {
-    // var node_data = pf_data.node_data;
-    // pf_data.clearAdjustments();
     
     var debug = false;
     var deltas = [];
@@ -503,7 +526,6 @@ var spanningtree = { /* A directed, rooted spanning tree */
       if (debug) console.log('  ('+i+'-adj) n_curr:  '+n_curr);
       if (debug) console.log('  ('+i+'-adj) delta:  '+deltas[i]);
       pf_data.set_adjustment(n_curr, 'arrival_rate', deltas[i])
-      // node_data[n_curr].adjustments.arrival_rate = deltas[i];
       var proportions = proportion_fn(i, this.nodes);
       
       /* Divide up flows among ports */ 
@@ -616,7 +638,7 @@ var graphing = {
       graph_data.series[this.model_labels[i]] = [];
     }
     
-    for (dpid in pf_out) {
+    for (var dpid in pf_out) {
       graph_data.dpids.push(dpid);
       for (var i = 0; i< this.pf_labels.length; i++) {
         var lab = this.pf_labels[i];
@@ -737,7 +759,7 @@ var sample = {
 
 function setSampleArv(arv) {
     stopLocal()
-    for (dpid in sample.data) {
+    for (var dpid in sample.data) {
       for (var i = 0; i< sample.data[dpid].length; i++) {
           sample.data[dpid][i].arrival_rate = arv;
        }
@@ -756,7 +778,7 @@ function initLocal() {
     update_gui();
     
     var random_sample_data = function() {
-      for (dpid in sample.data) {
+      for (var dpid in sample.data) {
         for (var i = 0; i< sample.data[dpid].length; i++) {
           sample.data[dpid][i].arrival_rate = Math.round(Math.random() * 9500) + 500;
           sample.data[dpid][i].uptime+=2;
