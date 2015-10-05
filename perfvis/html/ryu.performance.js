@@ -11,7 +11,6 @@ var OFPorts = {
 }
 
 var NOT_READY = -1;
-var edit_mode_active = false;
 
 /* For receiving performance information */
 var ws = new WebSocket("ws://" + location.host + "/v1.0/performance/ws");
@@ -20,7 +19,7 @@ ws.onmessage = function(event) {
     var new_data = JSON.parse(event.data);
     // console.log(JSON.stringify(new_data),null,2);
     
-    if (edit_mode_active) {
+    if (edit_mode.active) {
       var ret = {"id": new_data.id, "jsonrpc": "2.0", "result": ""};
       this.send(JSON.stringify(ret));
       return;
@@ -170,8 +169,10 @@ var pf_data = {
             
             /* check ports are the same */
             for (var i = 0; i<update_dp.length; i++) {
-              if ($.inArray(update_dp[i].port_no,live.ports)<0 ) { // is in update but not local  //  && !OFPorts.hasOwnProperty(update_dp[i].port_no)
-                console.log('adding \'live but not local\' port '+update_dp[i].port_no);
+              if ($.inArray(update_dp[i].port_no,live.ports)<0 ) { 
+                // is in update but not in data  
+                // old, but left for reference // console.log('adding \'live but not local\' port '+update_dp[i].port_no);
+                // //  && !OFPorts.hasOwnProperty(update_dp[i].port_no)
                 live.ports.push(update_dp[i].port_no);
                 this.live_data[dpid].adjacent_nodes = topo.get_links(dpid);
               }
@@ -343,6 +344,7 @@ var pf_data = {
 }
 
 var edit_mode = {
+    active: false,
     saved_pf_data: '',
     saved_topo_data: '',
     enter: function(pf_data,toponodes) {
@@ -735,7 +737,21 @@ var sample = {
       {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
     ]
   },
-  controller:
+  controller: {
+    "packet_in_delta":12,
+    "packet_in_total":70,
+    "duration":1,
+    "up_time":20,
+    "switches":[
+      {"total_packet_in":12,"dpid":1},
+      {"total_packet_in":17,"dpid":2},
+      {"total_packet_in":5,"dpid":3},
+      {"total_packet_in":6,"dpid":4},
+      {"total_packet_in":18,"dpid":5},
+      {"total_packet_in":6,"dpid":6},
+      {"total_packet_in":6,"dpid":7}
+    ],
+  },
   switches: [
     { "dpid": "0000000000000001",
       "ports": [
@@ -803,5 +819,5 @@ function stopLocal() {
 
 var offlineLoop = 'none';
 /* Control for swapping between local and server modes. Comment one. */
-initLocal();    // for offline testing, omgoodness this really upsets the server if left on when running server mode..
-// initServer();   // for server
+// initLocal();    // for offline testing, omgoodness this really upsets the server if left on when running server mode..
+initServer();   // for server

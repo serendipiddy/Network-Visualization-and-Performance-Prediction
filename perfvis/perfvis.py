@@ -15,6 +15,8 @@ import process_stats_port as process
 import process_stats_flow as processf
 from performance_server import PerformanceServerController
 
+import calendar, time
+
 # from ryu.topology.api import get_switch, get_link
 # import json
 
@@ -45,9 +47,13 @@ class PerformanceServerApp(app_manager.RyuApp):
         self.placeholder = 'loading'
         self.statstype = 'port'          # 'port' or 'flow', depending on the desired statistics
         self.dp_packet_in = {} # {dpid:, count:}
+        
+        # controller stats
         self.total_packet_in = 0
         self.prev_packet_in = 0
-
+        
+        self.start_time = calendar.timegm(time.gmtime())
+        self.prev_time = calendar.timegm(time.gmtime())
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
@@ -91,6 +97,7 @@ class PerformanceServerApp(app_manager.RyuApp):
                 # print("Counted %d datapaths. Request #%d sent" % (count, self.req_count))
                 sys.stdout.write('Counted %d datapaths. Request #%d sent. Packet_in: %d    \r' % (count, self.req_count, self.total_packet_in))
                 sys.stdout.flush();
+                
             hub.sleep(self.waittime)
             self.rpc_broadcall('event_update_controller',self.controller_stats())
             self.rpc_broadcall('event_update_statistics',self.currentstats)
@@ -196,7 +203,15 @@ class PerformanceServerApp(app_manager.RyuApp):
         return switches
             
     def controller_stats(self):
+        current_time = calendar.timegm(time.gmtime())
         rv = {}
+        
+        # times
+        rv['up_time'] = current_time - self.start_time
+        rv['duration'] = current_time - self.prev_time
+        self.prev_time = current_time
+        
+        # stats
         rv['packet_in_total'] = self.total_packet_in
         rv['packet_in_delta'] = self.total_packet_in - self.prev_packet_in
         rv['switches'] = self.get_ctrl_switches()
