@@ -603,6 +603,10 @@ var sample = {
     "0000000000000002": [
       {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.1, "depart_rate": 201.1, "total_tx": 100, "total_rx": 100, "uptime": 0},
       {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
+    ],
+    "0000000000000003": [
+      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.1, "depart_rate": 201.1, "total_tx": 100, "total_rx": 100, "uptime": 0},
+      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
     ]
   },
   controller: {
@@ -624,21 +628,49 @@ var sample = {
     { "dpid": "0000000000000001",
       "ports": [
         {"hw_addr": "62:97:f2:85:7b:af", "name": "s1-eth1", "port_no": "00000001", "dpid": "0000000000000001"}, 
-        {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}
+        {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}, 
+        {"hw_addr": "02:5d:c1:3d:2f:23", "name": "s1-eth3", "port_no": "00000003", "dpid": "0000000000000001"}
       ]}, 
     { "dpid": "0000000000000002",
       "ports": [
         {"hw_addr": "82:bd:da:72:ca:bb", "name": "s2-eth1", "port_no": "00000001", "dpid": "0000000000000002"}, 
-        {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}
+        {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}, 
+        {"hw_addr": "de:14:29:11:01:23", "name": "s2-eth3", "port_no": "00000003", "dpid": "0000000000000002"}
+      ]}, 
+    { "dpid": "0000000000000003",
+      "ports": [
+        {"hw_addr": "82:bd:da:72:ca:21", "name": "s3-eth1", "port_no": "00000001", "dpid": "0000000000000003"}, 
+        {"hw_addr": "de:14:29:11:01:22", "name": "s3-eth2", "port_no": "00000002", "dpid": "0000000000000003"}
       ]}
   ],
   links: [
-    { "src": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}, 
+    { 
+      "src": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}, 
       "dst": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}
     }, 
-    { "src": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}, 
+    { 
+      "src": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}, 
       "dst": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}
-    }
+    }, 
+    /* 1 - 3 */
+    { 
+      "src": {"hw_addr": "02:5d:c1:3d:2f:23", "name": "s1-eth3", "port_no": "00000003", "dpid": "0000000000000001"}, 
+      "dst": {"hw_addr": "82:bd:da:72:ca:21", "name": "s3-eth1", "port_no": "00000002", "dpid": "0000000000000002"}
+    },
+    { 
+      "src": {"hw_addr": "82:bd:da:72:ca:21", "name": "s3-eth1", "port_no": "00000002", "dpid": "0000000000000001"}, 
+      "dst": {"hw_addr": "02:5d:c1:3d:2f:23", "name": "s1-eth3", "port_no": "00000003", "dpid": "0000000000000002"}
+    },
+    
+    /* 2 - 3 */
+    { 
+      "src": {"hw_addr": "de:14:29:11:01:23", "name": "s2-eth3", "port_no": "00000003", "dpid": "0000000000000001"}, 
+      "dst": {"hw_addr": "de:14:29:11:01:22", "name": "s3-eth2", "port_no": "00000002", "dpid": "0000000000000002"}
+    },
+    { 
+      "src": {"hw_addr": "de:14:29:11:01:23", "name": "s3-eth2", "port_no": "00000002", "dpid": "0000000000000002"}
+      "dst": {"hw_addr": "de:14:29:11:01:22", "name": "s2-eth3", "port_no": "00000003", "dpid": "0000000000000001"}, 
+    },
   ]
 };
 
@@ -687,5 +719,5 @@ function stopLocal() {
 
 var offlineLoop = 'none';
 /* Control for swapping between local and server modes. Comment one. */
-// initLocal();    // for offline testing, omgoodness this really upsets the server if left on when running server mode..
-initServer();   // for server
+initLocal();    // for offline testing, omgoodness this really upsets the server if left on when running server mode..
+// initServer();   // for server
