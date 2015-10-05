@@ -250,7 +250,7 @@ var pf_data = {
     },
     event_update_controller: function (toponodes, update) {
         console.log('controller stats received');
-        // console.log(JSON.stringify(update));
+        console.log(JSON.stringify(update));
     },
     set_adjustment: function(dpid, attr, value) {
       if (!dpid_exists) {
@@ -727,14 +727,15 @@ var update_gui = function () { /* Updates the displayed performance values */
 var sample = {
   data: {
     "0000000000000001": [
-      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.1, "depart_rate": 101.1, "total_rx": 100, "total_rx": 100, "uptime": 0},
-      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.2, "depart_rate": 101.2, "total_rx": 100, "total_rx": 100, "uptime": 0},
+      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.1, "depart_rate": 101.1, "total_tx": 100, "total_rx": 100, "uptime": 0},
+      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.2, "depart_rate": 101.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
     ],
     "0000000000000002": [
-      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.1, "depart_rate": 201.1, "total_rx": 100, "total_rx": 100, "uptime": 0},
-      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_rx": 100, "total_rx": 100, "uptime": 0},
+      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.1, "depart_rate": 201.1, "total_tx": 100, "total_rx": 100, "uptime": 0},
+      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
     ]
   },
+  controller:
   switches: [
     { "dpid": "0000000000000001",
       "ports": [
@@ -773,6 +774,7 @@ function initLocal() {
     topo.initialize({switches: sample.switches, links: sample.links});
     elem.update();
     pf_data.event_update_statistics(topo.nodes,sample.data);
+    pf_data.event_update_controller(sample.controller);
     $('#loading').hide();
     $('#control-panel').show();
     update_gui();
