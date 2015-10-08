@@ -35,7 +35,7 @@ ws.onmessage = function(event) {
         $('#loading').show();
       }
       else if (new_data.method === 'event_update_controller') {
-        // null
+        update_gui();
       }
       else {
         console.log('successful update');
@@ -84,7 +84,6 @@ var pf_data = {
         'node_status': (is_real_node ? 'active':'extra'),    /* default setting */
         // 'configuration': {
         'service_rate': config.switch_configs[config.switch_default].service_rate, 
-        'pnf':            pnf,
         'queue_capacity': queue_capacity,
         'adjustments': { /* set through UI */ 
           'service_rate':   0,
@@ -97,6 +96,8 @@ var pf_data = {
       }
       var live = {
         'dpid': dpid,
+        'total_tx':       0,
+        'pnf':            pnf,
         'ports': [],            /* populated next */
         'aggregate': {          /* populated next */
           'arrival_rate': 0,    
@@ -206,6 +207,7 @@ var pf_data = {
             var total_in  = 0;
             var rate_in   = [];
             var rate_out  = [];
+            var switch_tx = 0;
             
             for (var i = 0; i<update_dp.length; i++) {
               var port = update_dp[i];
@@ -214,10 +216,12 @@ var pf_data = {
               if (!(port.port_no in OFPorts)) {
                 total_in += port.arrival_rate;
                 total_out += port.depart_rate;
+                switch_tx += port.total_tx;
                 rate_in.push({'port_no':port.port_no,'proportion':port.arrival_rate});
                 rate_out.push({'port_no':port.port_no,'proportion':port.depart_rate});
               }
             }
+            live.total_tx = switch_tx;
             
             /* TODO: add exponential smoothing to the aggregate values */
             if (this.exponSmoothing) {
@@ -246,12 +250,23 @@ var pf_data = {
             console.log("Error: topo ("+toponodes.length+") and update node ("+sn_length+") lengths differ");
             return NOT_READY;
         }
-        
-        /* TODO: add another object for the controller */
     },
     event_update_controller: function (toponodes, update) {
         console.log('controller stats received');
         console.log(JSON.stringify(update));
+        for (var i = 0; i < update.switches.length; i++) {
+          var dpid = update.switches[i].dpid;
+          
+          if (dpid_exists(dpid)) {
+            var total_traffic = this.live_data[dpid].total_tx;
+            if (total_traffic <= 0) {
+              this.live_data[dpid].pnf = 0
+            }
+            else {
+              this.live_data[dpid].pnf = update.switches[i].total_packet_in/total_traffic
+            }
+          }
+        }
     },
     set_adjustment: function(dpid, attr, value) {
       if (!dpid_exists) {
@@ -751,13 +766,9 @@ var sample = {
     "duration":1,
     "up_time":20,
     "switches":[
-      {"total_packet_in":12,"dpid":1},
-      {"total_packet_in":17,"dpid":2},
-      {"total_packet_in":5,"dpid":3},
-      {"total_packet_in":6,"dpid":4},
-      {"total_packet_in":18,"dpid":5},
-      {"total_packet_in":6,"dpid":6},
-      {"total_packet_in":6,"dpid":7}
+      {"dpid":"0000000000000001","total_packet_in":12},
+      {"dpid":"0000000000000002","total_packet_in":17},
+      {"dpid":"0000000000000003","total_packet_in":5},
     ],
   },
   switches: [
@@ -823,7 +834,7 @@ function initLocal() {
     topo.initialize({switches: sample.switches, links: sample.links});
     elem.update();
     pf_data.event_update_statistics(topo.nodes,sample.data);
-    pf_data.event_update_controller(sample.controller);
+    pf_data.event_update_controller(topo.nodes,sample.controller);
     $('#loading').hide();
     $('#control-panel').show();
     update_gui();
@@ -852,5 +863,5 @@ function stopLocal() {
 
 var offlineLoop = 'none';
 /* Control for swapping between local and server modes. Comment one. */
-// initLocal();    // for offline testing, omgoodness this really upsets the server if left on when running server mode..
-initServer();   // for server
+initLocal();    // for offline testing, omgoodness this really upsets the server if left on when running server mode..
+// initServer();   // for server
