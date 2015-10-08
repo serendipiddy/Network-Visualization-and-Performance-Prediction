@@ -863,5 +863,5 @@ function stopLocal() {
 
 var offlineLoop = 'none';
 /* Control for swapping between local and server modes. Comment one. */
-initLocal();    // for offline testing, omgoodness this really upsets the server if left on when running server mode..
-// initServer();   // for server
+if (offlinetesting) initLocal();  // for offline testing
+else initServer();   // for server
