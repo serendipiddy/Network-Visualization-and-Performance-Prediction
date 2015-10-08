@@ -100,7 +100,7 @@ class PerformanceServerApp(app_manager.RyuApp):
                 sys.stdout.flush();
                 
             hub.sleep(self.waittime)
-            # self.rpc_broadcall('event_update_controller',self.controller_stats())
+            self.rpc_broadcall('event_update_controller',self.controller_stats())
             self.rpc_broadcall('event_update_statistics',self.currentstats)
 
 
@@ -181,12 +181,12 @@ class PerformanceServerApp(app_manager.RyuApp):
     def switch_features_handler(self, ev):
         dp = ev.msg.datapath
         if dp.id not in self.dp_packet_in:
-          self.dp_packet_in[dp.id] = 0
+          self.dp_packet_in[dpid_to_str(dp.id)] = 0
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
         dp = ev.msg.datapath
-        
+        dpid = dpid_to_str(dp.id)
         # # filter LLDP packets.. or not, because while there isn't a reply, they place a load on the controller.
         # pkt = packet.Packet(msg.data)
         # eth = pkt.get_protocols(ethernet.ethernet)[0]
@@ -196,12 +196,12 @@ class PerformanceServerApp(app_manager.RyuApp):
         # controller_count++
         self.total_packet_in = 1 + self.total_packet_in 
         # switch_count++
-        if dp.id in self.dp_packet_in: 
-            self.dp_packet_in[dp.id] = 1 + self.dp_packet_in[dp.id]
+        if dpid in self.dp_packet_in: 
+            self.dp_packet_in[dpid] = 1 + self.dp_packet_in[dpid]
         else:
-            self.dp_packet_in[dp.id] = 1
+            self.dp_packet_in[dpid] = 1
             
-        # print ('dpid: %d, %d total: %d' % (dp.id, self.dp_packet_in[dp.id], self.total_packet_in))
+        # print ('dpid: %s, %d total: %d' % (dpid, self.dp_packet_in[dpid], self.total_packet_in))
     
     '''Controller broadcast not in use'''
     def get_ctrl_switches(self, dp='all'):
@@ -214,7 +214,7 @@ class PerformanceServerApp(app_manager.RyuApp):
               switches.append(s)
         else:
             s = {}
-            s['dpid'] = dp
+            s['dpid'] = dpid_to_str(dp)
             s['total_packet_in'] = self.dp_packet_in[dp]
             switches.append(s)
         return switches

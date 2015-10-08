@@ -42,3 +42,6 @@ var config = {
   'config_keys': ['switch_brand', 'queueing_model', 'service_rate', 'pnf', 'queue_capacity'],
   'adjustment_keys': ['service_rate','arrival_rate','pnf','queue_capacity'],
 }
+
+offlinetesting = false;
+// offlinetesting = true;

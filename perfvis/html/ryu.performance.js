@@ -35,7 +35,7 @@ ws.onmessage = function(event) {
         $('#loading').show();
       }
       else if (new_data.method === 'event_update_controller') {
-        update_gui();
+        // update_gui();
       }
       else {
         console.log('successful update');
@@ -263,7 +263,8 @@ var pf_data = {
               this.live_data[dpid].pnf = 0
             }
             else {
-              this.live_data[dpid].pnf = update.switches[i].total_packet_in/total_traffic
+              console.log(dpid+": pnf = "+update.switches[i].total_packet_in+" / "+total_traffic);
+              this.live_data[dpid].pnf = update.switches[i].total_packet_in/total_traffic;
             }
           }
         }
