@@ -140,10 +140,10 @@ class PerformanceServerApp(app_manager.RyuApp):
         
         current_stats = process.avg_rates(current_data, self.prevreadings[dp], self.placeholder)
         # include the Pnf value
-        if current_stats['total_tx'] == 0:
-          current_stats['pnf'] = 0
-        else:
-          current_stats['pnf'] = dp_packet_in[dp] / current_stats['total_tx'] 
+        # if current_stats['total_tx'] == 0:
+          # current_stats['pnf'] = 0
+        # else:
+          # current_stats['pnf'] = dp_packet_in[dp] / current_stats['total_tx'] 
         
         self.prevreadings[dp] = current_data['ports']
         self.currentstats[dp] = current_stats
