@@ -151,10 +151,12 @@ elem.update = function () {
 };
 
 function is_valid_link(link) {
+    // console.log('validate link: '+link.src.dpid+' < '+link.dst.dpid+' '+(link.src.dpid < link.dst.dpid))
     return (link.src.dpid < link.dst.dpid)
 }
 
 var topo = {
+    debug: false,
     nodes: [],
     links: [],
     node_index: {}, // dpid -> index of nodes array
@@ -171,7 +173,7 @@ var topo = {
     add_links: function (links) {
         for (var i = 0; i < links.length; i++) {
             if (!is_valid_link(links[i])) continue;
-            console.log("add link: " + JSON.stringify(links[i]));
+            if (self.debug) console.log("add link: " + JSON.stringify(links[i]));
 
             var src_dpid = links[i].src.dpid;
             var dst_dpid = links[i].dst.dpid;
@@ -190,7 +192,7 @@ var topo = {
     },
     delete_nodes: function (nodes) {
         for (var i = 0; i < nodes.length; i++) {
-            console.log("delete switch: " + JSON.stringify(nodes[i]));
+            if (self.debug) console.log("delete switch: " + JSON.stringify(nodes[i]));
 
             node_index = this.get_node_index(nodes[i]);
             this.nodes.splice(node_index, 1);
@@ -200,7 +202,7 @@ var topo = {
     delete_links: function (links) {
         for (var i = 0; i < links.length; i++) {
             if (!is_valid_link(links[i])) continue;
-            console.log("delete link: " + JSON.stringify(links[i]));
+            if (self.debug) console.log("delete link: " + JSON.stringify(links[i]));
 
             link_index = this.get_link_index(links[i]);
             this.links.splice(link_index, 1);

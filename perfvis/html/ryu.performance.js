@@ -253,7 +253,7 @@ var pf_data = {
     },
     event_update_controller: function (toponodes, update) {
         console.log('controller stats received');
-        console.log(JSON.stringify(update));
+        // console.log(JSON.stringify(update));
         for (var i = 0; i < update.switches.length; i++) {
           var dpid = update.switches[i].dpid;
           
@@ -263,7 +263,7 @@ var pf_data = {
               this.live_data[dpid].pnf = 0
             }
             else {
-              console.log(dpid+": pnf = "+update.switches[i].total_packet_in+" / "+total_traffic);
+              // console.log(dpid+": pnf = "+update.switches[i].total_packet_in+" / "+total_traffic);
               this.live_data[dpid].pnf = update.switches[i].total_packet_in/total_traffic;
             }
           }
@@ -831,7 +831,9 @@ function setSampleArv(arv) {
     update_gui();
 }
 
+sample = scale_test_linear_100;
 function initLocal() {
+    var start_time = new Date()
     topo.initialize({switches: sample.switches, links: sample.links});
     elem.update();
     pf_data.event_update_statistics(topo.nodes,sample.data);
@@ -840,6 +842,9 @@ function initLocal() {
     $('#control-panel').show();
     update_gui();
     
+    var end_time = new Date()
+    console.log("nodes:"+sample.switches.length+" startup time:"+(end_time.getTime() - start_time.getTime())+"ms");
+    
     var random_sample_data = function() {
       for (var dpid in sample.data) {
         for (var i = 0; i< sample.data[dpid].length; i++) {
@@ -847,15 +852,21 @@ function initLocal() {
           sample.data[dpid][i].uptime+=2;
     }} };
     
+    var iter_count = 0;
+    var num_nodes = sample.switches.length;
       
     offlineLoop = setInterval(function(s) {
+      // Date.getTime() returns milliseconds since 1/1/1970 00:00:00 UTC
+      var start_time = new Date()
       random_sample_data();
       pf_data.event_update_statistics(topo.nodes,sample.data);
-      console.log('successful update');
+      // console.log('successful update');
       $('#loading').hide();
       $('#control-panel').show();
       update_gui();
-    }, 2000);
+      var end_time = new Date()
+      console.log("nodes:"+num_nodes+" run:"+(iter_count++)+" time:"+(end_time.getTime() - start_time.getTime())+"ms");
+    }, 1000);
 }
 
 function stopLocal() {
