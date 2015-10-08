@@ -6,6 +6,7 @@ from ryu.lib.dpid import dpid_to_str
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER, CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.controller import ofp_event
+from ryu.lib.packet.ether_types import ETH_TYPE_LLDP
 
 from socket import error as SocketError
 from tinyrpc.exc import InvalidReplyError
@@ -99,7 +100,7 @@ class PerformanceServerApp(app_manager.RyuApp):
                 sys.stdout.flush();
                 
             hub.sleep(self.waittime)
-            self.rpc_broadcall('event_update_controller',self.controller_stats())
+            # self.rpc_broadcall('event_update_controller',self.controller_stats())
             self.rpc_broadcall('event_update_statistics',self.currentstats)
 
 
@@ -138,6 +139,11 @@ class PerformanceServerApp(app_manager.RyuApp):
         dp = current_data['datapath']
         
         current_stats = process.avg_rates(current_data, self.prevreadings[dp], self.placeholder)
+        # include the Pnf value
+        if current_stats['total_tx'] is 0:
+          current_stats['pnf'] = 0
+        else:
+          current_stats['pnf'] = dp_packet_in[dp] / current_stats['total_tx'] 
         
         self.prevreadings[dp] = current_data['ports']
         self.currentstats[dp] = current_stats
@@ -180,13 +186,24 @@ class PerformanceServerApp(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
         dp = ev.msg.datapath
-        self.total_packet_in = 1 + self.total_packet_in
-        if dp.id in self.dp_packet_in:
+        
+        # # filter LLDP packets.. or not, because while there isn't a reply, they place a load on the controller.
+        # pkt = packet.Packet(msg.data)
+        # eth = pkt.get_protocols(ethernet.ethernet)[0]
+        # if eth.ethertype == ether_types.ETH_TYPE_LLDP:
+        #   return
+        
+        # controller_count++
+        self.total_packet_in = 1 + self.total_packet_in 
+        # switch_count++
+        if dp.id in self.dp_packet_in: 
             self.dp_packet_in[dp.id] = 1 + self.dp_packet_in[dp.id]
         else:
             self.dp_packet_in[dp.id] = 1
+            
         # print ('dpid: %d, %d total: %d' % (dp.id, self.dp_packet_in[dp.id], self.total_packet_in))
-      
+    
+    '''Controller broadcast not in use'''
     def get_ctrl_switches(self, dp='all'):
         switches = []
         if dp == 'all':
