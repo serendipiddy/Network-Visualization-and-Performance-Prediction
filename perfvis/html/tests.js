@@ -796,55 +796,100 @@ function testSpanningTree() {
 
 }
 
-var validation_data = {
-  data: [],
-  header: [],
-  resest: function() {
+function OutputObj() {
+  this.data = [];
+  this.header = [];
+  this.reset = function() {
     this.data = [];
     this.header = [];
-  },
-  set_header: function(header) {
+  };
+  this.set_header = function(header) {
     this.header = header;
-  },
-  add_row: function(row) {
-    if (row.length != this.headers.length) {
-      console.log('row length ('+row.length+' does not match header length('+this.header.length+')');
+  };
+  this.add_row = function(row) {
+    if (row.length != this.header.length) {
+      console.log('row length ('+row.length+') does not match header length('+this.header.length+')');
       return;
     }
     this.data.push(row);
-  },
-  save_file_table: function() {
-    var out = this.header.join(' ') + '\n';
-    this.data.forEach(function(v,i) {
-      out.push(v.join(' ')+'\n');
-    };
-    window.open('data:text/csv;charset=utf-8,' + escape(out));
-  },
-  
-
+  };
+  this.save_file_table = function(filename) {
+    var out = [];
+    out.push(this.header.join(' ') + '\n');
+    for (var i = 0; i<this.data.length; i++) {
+      out.push(this.data[i].join(' ')+'\n');
+    }
+    var blob = new Blob(out,{type: "text/plain;charset=utf-8"});
+    saveAs(blob, filename);
+  };
 }
 
-function set_collection() {
-  validation_data.reset();
-  var header = ['time'];
-  for (
-  validation_data.set_header();
+var measure_arrivals = {
+  timer: '',
+  own_data: '',
+  set: function() {
+    this.own_data = new OutputObj();
+    this.own_data.reset();
+    var header = ['time'];
+    var nodes = Object.keys(pf_data.node_data).sort();
+    for (var i = 0; i<nodes.length; i++) {
+      var dpid = nodes[i];
+      header.push(dpid+'_live');
+      header.push(dpid+'_adj');
+    }
+    this.own_data.set_header(header);
+  },
+  collect_data: function() {
+    var data = [new Date().getTime()]; // timeStamp
+    var n_data = pf_data.node_data;
+    var l_data = pf_data.live_data;
+    var nodes = Object.keys(pf_data.node_data).sort();
+    for (var i = 0; i<nodes.length; i++) {
+      var dpid = nodes[i];
+      data.push(l_data[dpid].aggregate.arrival_rate); // live
+      data.push(n_data[dpid].adjustments.arrival_rate); // adjustment
+    }
+    this.own_data.add_row(data);
+  },
+  start: function() {
+    var self = this;
+    self.timer = setInterval(function(s) {
+      self.collect_data();
+    }, 1000);
+  },
+  stop: function(timer) {
+    clearInterval(timer);
+  },
+  save: function(filename) {
+    this.own_data.save_file_table(filename);
+  }
 }
-var start_collecting = setInterval(function(s) {
-  // Date.getTime() returns milliseconds since 1/1/1970 00:00:00 UTC
-  var time = new Date()
-  var data = [time.getTime(),];
-  validation_data.add_row(data);
-}, 1000);
 
-text_options_form.addEventListener("submit", function(event) {
-	event.preventDefault();
-	var BB = get_blob();
-	saveAs(
-		  new BB(
-			  [text.value || text.placeholder]
-			, {type: "text/plain;charset=" + document.characterSet}
-		)
-		, (text_filename.value || text_filename.placeholder) + ".txt"
-	);
-}, false);
+var measure_latency = {
+  events: {}, // name -> number
+  start_time: 0,
+  set: function() {
+    this.own_data = new OutputObj();
+    this.own_data.reset();
+    this.events = {};
+    var header = ['time','count','event','aux'];
+    this.own_data.set_header(header);
+    this.start_time = (window.performance.now()*1000).toFixed(0);
+    this.event_occured('test_init','');
+  },
+  event_occured(name,aux) { 
+    var time = (window.performance.now()*1000).toFixed(0) - this.start_time; // timeStamp
+    if (name in this.events) this.events[name]++;
+    else this.events[name] = 1;
+    this.own_data.add_row([time, this.events[name], name, aux]);
+  },
+  save: function(filename) {
+    this.own_data.save_file_table(filename);
+  }
+}
+
+measure_latency.set();
+
+var test_sample_topologies = [scale_test_tree_1, scale_test_tree_2, scale_test_tree_5, scale_test_tree_10, scale_test_tree_20, scale_test_tree_50, scale_test_tree_100, scale_test_tree_200, scale_test_tree_500, scale_test_tree_1000, scale_test_tree_2000,];
+
+var sample = test_sample_topologies[0];

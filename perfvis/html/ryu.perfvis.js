@@ -18,12 +18,13 @@ var CONF = {
 
 /* Topology functions */
 /* SVG element binding */
+measure_latency.event_occured('loading_topofile_begin');
 
 var ws = new WebSocket("ws://" + location.host + "/v1.0/topology/ws");
 ws.onmessage = function(event) {
     var data = JSON.parse(event.data);
     console.log("WS.ONMESSAGE()"+event.data);
-
+    
     var result = rpc[data.method](data.params);
 
     var ret = {"id": data.id, "jsonrpc": "2.0", "result": result};
@@ -337,6 +338,7 @@ var rpc = {
 }
 
 function initialize_topology() {
+    
     d3.json("/v1.0/topology/switches", function(error, switches) {
         d3.json("/v1.0/topology/links", function(error, links) {
             topo.initialize({switches: switches, links: links});
@@ -348,3 +350,5 @@ function initialize_topology() {
 function initServer() { // 'main()' from ryu.topology.js
     initialize_topology();
 }
+
+measure_latency.event_occured('loading_topofile_end');

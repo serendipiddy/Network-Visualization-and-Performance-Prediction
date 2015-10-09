@@ -10,6 +10,7 @@ var OFPorts = {
     0xffffffff: 'OFPP_ANY'
 }
 
+measure_latency.event_occured('loading_performance_begin');
 var NOT_READY = -1;
 
 /* For receiving performance information */
@@ -121,6 +122,7 @@ var pf_data = {
       }
     },
     event_update_statistics: function (toponodes, update) {
+        measure_latency.event_occured('update_stats_begin','');
         var sn_length = 0;
         
         if ($.isEmptyObject(update)) {
@@ -250,6 +252,7 @@ var pf_data = {
             console.log("Error: topo ("+toponodes.length+") and update node ("+sn_length+") lengths differ");
             return NOT_READY;
         }
+        measure_latency.event_occured('update_stats_end','');
     },
     event_update_controller: function (toponodes, update) {
         // console.log('controller stats received');
@@ -503,6 +506,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     if (debug) console.log('  ('+member+'-plt) ports:   '+JSON.stringify(currnode.ports)); // may not be in the correct place..
   },
   create_tree: function(src,live_data) { // create_tree('root', pf_data.live_data);
+    measure_latency.event_occured('create_tree_begin',src);
     if (!dpid_exists(src)) {
       return;
     }
@@ -532,9 +536,10 @@ var spanningtree = { /* A directed, rooted spanning tree */
       
       currMem++;
     }
+    measure_latency.event_occured('create_tree_end',src);
   },
   adjust_traffic: function(arrival_rate_delta, proportion_fn, pf_data) {
-    
+    measure_latency.event_occured('adjusting_traffic_begin',proportion_fn.name);
     var debug = false;
     var deltas = [];
     deltas.push(arrival_rate_delta); // root's delta
@@ -555,6 +560,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
         if (debug) console.log('  ('+i+'-adj) prop:  '+proportions[p]*deltas[i]);
       }
     }
+    measure_latency.event_occured('adjusting_traffic_end',proportion_fn.name);
   },
   get_proportion_prop: function(member, nodes) { /* divide according to proportion_out distributions */
     var proportions = [];
@@ -731,11 +737,17 @@ graphing.create_graphs(['service_rate', 'arrival_rate', 'queue_capacity'],['load
 // graphing.create_graphs(['arrival_rate'],[]);
 
 var update_gui = function () { /* Updates the displayed performance values */
+    measure_latency.event_occured('update_gui()_begin','');
     var in_data  = pf_data.get_gui_input_all();
+    measure_latency.event_occured('get_input','');
     var model_data = model.get_output_all();
+    measure_latency.event_occured('get_model','');
     
     update_gui_text(in_data,model_data);
+    measure_latency.event_occured('gui_text','');
     graphing.update_graphs(in_data,model_data);
+    measure_latency.event_occured('update_graphs','');
+    measure_latency.event_occured('update_gui()_end','');
 }
 
 
@@ -836,7 +848,8 @@ function setSampleArv(arv) {
 
 // sample = scale_test_linear_100;
 function initLocal() {
-    var start_time = new Date()
+    measure_latency.event_occured("startup_begin",sample.switches.length);
+    // var start_time = new Date()
     topo.initialize({switches: sample.switches, links: sample.links});
     elem.update();
     pf_data.event_update_statistics(topo.nodes,sample.data);
@@ -846,7 +859,8 @@ function initLocal() {
     update_gui();
     
     var end_time = new Date()
-    console.log("nodes:"+sample.switches.length+" startup time:"+(end_time.getTime() - start_time.getTime())+"ms");
+    // console.log("nodes:"+sample.switches.length+" startup time:"+(end_time.getTime() - start_time.getTime())+"ms");
+    measure_latency.event_occured("startup_end",sample.switches.length);
     
     var random_sample_data = function() {
       for (var dpid in sample.data) {
@@ -860,15 +874,18 @@ function initLocal() {
       
     offlineLoop = setInterval(function(s) {
       // Date.getTime() returns milliseconds since 1/1/1970 00:00:00 UTC
-      var start_time = new Date()
+      measure_latency.event_occured('offline_loop_begin',(iter_count++));
+      // var start_time = new Date()
       random_sample_data();
       pf_data.event_update_statistics(topo.nodes,sample.data);
       // console.log('successful update');
       $('#loading').hide();
       $('#control-panel').show();
       update_gui();
-      var end_time = new Date()
-      console.log("nodes:"+num_nodes+" run:"+(iter_count++)+" time:"+(end_time.getTime() - start_time.getTime())+"ms");
+      // var end_time = new Date()
+      // console.log("nodes:"+num_nodes+" run:"+(iter_count++)+" time:"+(end_time.getTime() - start_time.getTime())+"ms");
+      measure_latency.event_occured('offline_loop_end',iter_count);
+      console.log('offline_loop');
     }, 1000);
 }
 
@@ -880,3 +897,5 @@ var offlineLoop = 'none';
 /* Control for swapping between local and server modes. Comment one. */
 if (offlinetesting) initLocal();  // for offline testing
 else initServer();   // for server
+
+measure_latency.event_occured('loading_performance_end');
