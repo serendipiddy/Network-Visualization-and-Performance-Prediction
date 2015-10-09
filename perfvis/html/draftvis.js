@@ -12,6 +12,7 @@ var populateListNum = function(select, data, sel) {
             items.push('<li>'+id+':    '+option.toFixed(6)+'</li>');
         }
     });    
+    items.sort();
     select.html(items.join(''));
 }
 
@@ -79,7 +80,7 @@ var setControlPanelListeners = function() {
 var vis_clearAdjustments = function() {
   console.log('clearing adjustments in gui');
   pf_data.clearAdjustments();
-  populateDPSpecs(dpid);
+  // populateDPSpecs(dpid);
 }
 
 var smoothing = '';
@@ -126,6 +127,8 @@ var set_gui_text = function (e, toponodes) {
         .attr("x",85).attr("y",-25).text(MU+": "+default_val);
     statEnter.append("text").attr("class","capacity")
         .attr("x",25).attr("y",-10).text("capacity: "+default_val);
+    statEnter.append("text").attr("class","pnf")
+        .attr("x",100).attr("y",-10).text("pnf: "+default_val);
         
     // statEnter.append("text").attr("class","rx")
         // .attr("x",30).attr("y",10).text("Rx:  "+default_val);
@@ -138,27 +141,39 @@ var set_gui_text = function (e, toponodes) {
         .attr("x",25).attr("y",25).text("load: "+default_val);
     statEnter.append("text").attr("class","bufflen")
         .attr("x",25).attr("y",40).text("length: "+default_val);
+    statEnter.append("text").attr("class","packet_loss")
+        .attr("x",25).attr("y",55).text("");
         
 }
 
+var sojourn_scale = 1000000; // makes it micro second, rather than second
 var update_gui_text = function (in_data, out_data) {
     elem.stats.selectAll(".dpid").text(    function(d) {
         return "dpid:        "+dpid_to_int(d.dpid); });
+    // input
     elem.stats.selectAll(".lambda").text(    function(d) { 
         var o = in_data[d.dpid].arrival_rate;
-        return LAM+":        "+(o.live+o.adjustment).toFixed(2); });
+        return LAM+":        "+(o.live+o.adjustment).toFixed(0)+"/s"; });
     elem.stats.selectAll(".mu").text(    function(d) { 
         var o = in_data[d.dpid].service_rate;
-        return MU+":         "+(o.live+o.adjustment).toFixed(2); });
+        return MU+":         "+(o.live+o.adjustment).toFixed(0)+"/s"; });
     elem.stats.selectAll(".capacity").text(    function(d) { 
         var o = in_data[d.dpid].queue_capacity;
-        return "capacity:         "+(o.live+o.adjustment).toFixed(0); });
+        return "capacity:    "+(o.live+o.adjustment).toFixed(0); });
+    elem.stats.selectAll(".pnf").text(    function(d) { 
+        var o = in_data[d.dpid].pnf;
+        return "pnf: "+((o.live+o.adjustment)*100).toFixed(2)+"%"; });
+    // output
     elem.stats.selectAll(".sojourn").text(    function(d) { 
-        return "sojourn: "+out_data[d.dpid].sojourn.toFixed(4); });
+        return "sojourn: "+(out_data[d.dpid].sojourn*sojourn_scale).toFixed(4)+MU+"s"; });// mus = microsecond
     elem.stats.selectAll(".load") .text(    function(d) { 
-        return "load:        "+out_data[d.dpid].load.toFixed(4); });
+        return "load:        "+(out_data[d.dpid].load*100).toFixed(4)+"%"; });
     elem.stats.selectAll(".bufflen").text(    function(d) { 
-        return "length:    "+out_data[d.dpid].length.toFixed(4); });
+        return "length:    "+out_data[d.dpid].length.toFixed(4)+"packets"; });
+    elem.stats.selectAll(".packet_loss").text(    function(d) { 
+        if (!out_data[d.dpid].hasOwnProperty('packet_loss')) return "";
+        return "packet_loss:    "+out_data[d.dpid].packet_loss.toFixed(4)+"packets"; });
+        
     elem.node.selectAll('.switch-circle').attr( 'fill', function(d) {
       var dpid = d.dpid;
       if (out_data[dpid].load >= 1) {

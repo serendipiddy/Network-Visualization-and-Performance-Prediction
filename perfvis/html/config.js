@@ -43,5 +43,5 @@ var config = {
   'adjustment_keys': ['service_rate','arrival_rate','pnf','queue_capacity'],
 }
 
-// offlinetesting = false;
-offlinetesting = true;
+offlinetesting = false;
+//offlinetesting = true;

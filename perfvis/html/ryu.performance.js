@@ -252,10 +252,11 @@ var pf_data = {
         }
     },
     event_update_controller: function (toponodes, update) {
-        console.log('controller stats received');
+        // console.log('controller stats received');
         // console.log(JSON.stringify(update));
         for (var i = 0; i < update.switches.length; i++) {
           var dpid = update.switches[i].dpid;
+          
           
           if (dpid_exists(dpid)) {
             var total_traffic = this.live_data[dpid].total_tx;
@@ -267,6 +268,7 @@ var pf_data = {
               this.live_data[dpid].pnf = update.switches[i].total_packet_in/total_traffic;
             }
           }
+          // else {console.log('controller update received before switch');}
         }
     },
     set_adjustment: function(dpid, attr, value) {
@@ -327,7 +329,8 @@ var pf_data = {
           var ret = {
             'service_rate': {'live':this.node_data[dpid].service_rate,'adjustment':this.node_data[dpid].adjustments.service_rate},
             'arrival_rate': {'live':this.live_data[dpid].aggregate.arrival_rate, 'adjustment':this.node_data[dpid].adjustments.arrival_rate},
-            'queue_capacity': {'live':this.node_data[dpid].queue_capacity, 'adjustment': this.node_data[dpid].adjustments.queue_capacity}
+            'queue_capacity': {'live':this.node_data[dpid].queue_capacity, 'adjustment': this.node_data[dpid].adjustments.queue_capacity},
+            'pnf': {'live':this.live_data[dpid].pnf, 'adjustment': this.node_data[dpid].adjustments.pnf}
           }
           /* make sure alterations don't go below 0 */
           for(var a in ret) {
@@ -831,7 +834,7 @@ function setSampleArv(arv) {
     update_gui();
 }
 
-sample = scale_test_linear_100;
+// sample = scale_test_linear_100;
 function initLocal() {
     var start_time = new Date()
     topo.initialize({switches: sample.switches, links: sample.links});
