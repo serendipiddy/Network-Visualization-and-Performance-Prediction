@@ -796,3 +796,55 @@ function testSpanningTree() {
 
 }
 
+var validation_data = {
+  data: [],
+  header: [],
+  resest: function() {
+    this.data = [];
+    this.header = [];
+  },
+  set_header: function(header) {
+    this.header = header;
+  },
+  add_row: function(row) {
+    if (row.length != this.headers.length) {
+      console.log('row length ('+row.length+' does not match header length('+this.header.length+')');
+      return;
+    }
+    this.data.push(row);
+  },
+  save_file_table: function() {
+    var out = this.header.join(' ') + '\n';
+    this.data.forEach(function(v,i) {
+      out.push(v.join(' ')+'\n');
+    };
+    window.open('data:text/csv;charset=utf-8,' + escape(out));
+  },
+  
+
+}
+
+function set_collection() {
+  validation_data.reset();
+  var header = ['time'];
+  for (
+  validation_data.set_header();
+}
+var start_collecting = setInterval(function(s) {
+  // Date.getTime() returns milliseconds since 1/1/1970 00:00:00 UTC
+  var time = new Date()
+  var data = [time.getTime(),];
+  validation_data.add_row(data);
+}, 1000);
+
+text_options_form.addEventListener("submit", function(event) {
+	event.preventDefault();
+	var BB = get_blob();
+	saveAs(
+		  new BB(
+			  [text.value || text.placeholder]
+			, {type: "text/plain;charset=" + document.characterSet}
+		)
+		, (text_filename.value || text_filename.placeholder) + ".txt"
+	);
+}, false);
