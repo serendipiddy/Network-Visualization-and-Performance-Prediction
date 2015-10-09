@@ -52,3 +52,6 @@ To register a model, it needs to be included in index.html and it must add itsel
 ```JavaScript
 config.get_model['model_name'] = model_name;
 ```
+
+
+Ryu Topology and FileSaver.js used under the included licenses.
