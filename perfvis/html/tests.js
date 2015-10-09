@@ -826,11 +826,12 @@ function OutputObj() {
 
 var measure_arrivals = {
   timer: '',
+  count: 0,
   own_data: '',
   set: function() {
     this.own_data = new OutputObj();
     this.own_data.reset();
-    var header = ['time'];
+    var header = ['reading_count'];
     var nodes = Object.keys(pf_data.node_data).sort();
     for (var i = 0; i<nodes.length; i++) {
       var dpid = nodes[i];
@@ -840,7 +841,7 @@ var measure_arrivals = {
     this.own_data.set_header(header);
   },
   collect_data: function() {
-    var data = [new Date().getTime()]; // timeStamp
+    var data = [this.count++]; // timeStamp
     var n_data = pf_data.node_data;
     var l_data = pf_data.live_data;
     var nodes = Object.keys(pf_data.node_data).sort();

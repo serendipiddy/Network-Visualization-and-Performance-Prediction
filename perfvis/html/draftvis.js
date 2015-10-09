@@ -17,7 +17,7 @@ var populateListNum = function(select, data, sel) {
 }
 
 var populateDPSpecs = function (dpid) {
-    var specs = $('#specs');
+    // var specs = $('#specs');
     var data = pf_data.node_data[dpid];
     $('#select-brand').val(data.switch_brand);
     $('#select-model').val(data.queueing_model);
@@ -43,7 +43,6 @@ var setControlPanelListeners = function() {
         pf_data.set_config(dpid, 'queueing_model', $('#select-model').val());
         populateDPSpecs(dpid);
     });
-    
     $('#arrival-rate').change(function() {
         var dpid = $('#node-select').val();
         // pf_data.set_adjustment(dpid, 'arrival_rate', $('#arrival-rate').val());
@@ -80,7 +79,8 @@ var setControlPanelListeners = function() {
 var vis_clearAdjustments = function() {
   console.log('clearing adjustments in gui');
   pf_data.clearAdjustments();
-  // populateDPSpecs(dpid);
+  var dpid = $('#node-select').val();
+  populateDPSpecs(dpid);
 }
 
 var smoothing = '';
