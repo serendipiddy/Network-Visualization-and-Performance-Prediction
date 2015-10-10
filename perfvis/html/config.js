@@ -1,5 +1,5 @@
-// offlinetesting = false;
-offlinetesting = true;
+offlinetesting = false;
+// offlinetesting = true;
 
 var config = {
   'switch_default': 'openvswitch_vm',

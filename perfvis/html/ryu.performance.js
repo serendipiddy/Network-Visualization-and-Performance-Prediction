@@ -489,6 +489,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
         var prop_out = pfnd.proportion_out;
         if (debug) console.log('    ('+member+'-plt) hstexst: #hosts:'+(prop_out.length-numNeigh));
         
+        // ports leading to switches
         var neigh_ports = [];
         for (var i = 0; i < neighs.length; i++) {
             neigh_ports.push(parseInt(neighs[i].port_no))
@@ -496,7 +497,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
         // console.log('neighs:   '+neigh_ports);
         // console.log('prop_out: '+JSON.stringify(prop_out));
 
-        // host link won't be in adjacent nodes.[i].port_not
+        // host link won't be in adjacent nodes.[i].port_no, so 
         for (var i = 0; i < prop_out.length; i++) {
             if ($.inArray(parseInt(prop_out[i].port_no),neigh_ports)<0) {
                 currnode.proportions.push(prop_out[i].proportion);
@@ -591,14 +592,13 @@ var spanningtree = { /* A directed, rooted spanning tree */
     if (debug) console.log('  ('+member+'-gpp) proprtn: '+JSON.stringify(currnode.proportions));
     for (var i = 0; i < currnode.proportions.length; i++) { sum += currnode.proportions[i]; }
     
-    // if (sum == 0) currnode.proportions[i] = 1; // ###### TODO IS HERE ###### case of sum == 0 ######
-    
     if (debug) console.log('  ('+member+'-gpp) sum:   '+sum.toFixed(3));
     
-    for (var i = 0; i < currnode.proportions.length; i++) {
+    // for (var i = 0; i < currnode.proportions.length; i++) { // incorrect
+    for (var i = 0; i < currnode.neighbours.length; i++) { 
         if (debug) console.log('  ('+member+'-gpp)   node:  '+currnode.proportions[i].toFixed(3));
         if (debug) console.log('  ('+member+'-gpp)   port:  '+currnode.ports[i]);
-        proportions[i] = currnode.proportions[i]/sum;
+        proportions[i] = (sum == 0 ? 0 : currnode.proportions[i]/sum);
         prop_out = prop_out +' '+proportions[i].toFixed(3);
     }
     
@@ -612,7 +612,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     
     var currnode = nodes[member];
     if (debug) console.log('  ('+member+'-gpe) nodelen:*'+currnode.proportions.length);
-    for (var i = 0; i < currnode.proportions.length; i++) { 
+    for (var i = 0; i < currnode.neighbours.length; i++) { 
         proportions[i] = 1/currnode.proportions.length;
         prop_out = prop_out +' '+proportions[i].toFixed(3);
         if (debug) console.log('  ('+member+'-gpe)    node: '+proportions[i].toFixed(3));
