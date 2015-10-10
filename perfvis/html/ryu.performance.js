@@ -440,7 +440,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
   members: [], // list of dpids
   nodes: [],   // list of Nodes, matching dpids
   populate_node: function(member,pfnd) { /* populates an existing node */
-    var debug = true;
+    var debug = false;
     var currnode = this.nodes[member];
     var numNeigh = pfnd.adjacent_nodes.length;
     var neighs   = pfnd.adjacent_nodes;
@@ -515,7 +515,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     }
     this.members = [];
     this.nodes = [];
-    var debug = true;
+    var debug = false;
     
     this.members.push(src);
     this.root = new Node(src);
@@ -584,7 +584,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     var proportions = [];
     var sum = 0; 
     var prop_out = ''; // for debug
-    var debug = true;
+    var debug = false;
     
     var currnode = nodes[member];
     
