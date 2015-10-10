@@ -440,13 +440,13 @@ var spanningtree = { /* A directed, rooted spanning tree */
   members: [], // list of dpids
   nodes: [],   // list of Nodes, matching dpids
   populate_node: function(member,pfnd) { /* populates an existing node */
-    var debug = false;
+    var debug = true;
     var currnode = this.nodes[member];
     var numNeigh = pfnd.adjacent_nodes.length;
     var neighs   = pfnd.adjacent_nodes;
-    if (debug) console.log('  ('+member+'-plt) #adjnde: '+numNeigh);
+    if (debug) console.log('    ('+member+'-plt) #adjnde: '+numNeigh);
     
-    // console.log(JSON.stringify(neighs,null,2));
+    // console.log(numNeigh+' '+JSON.stringify(neighs,null,2));
     
     // add ports connecting to switches
     for (var i = 0; i < numNeigh; i++) {
@@ -454,25 +454,27 @@ var spanningtree = { /* A directed, rooted spanning tree */
       if ($.inArray(neighs[i].port_no,OFPorts)<0) { 
         
         var dpidNeigh = neighs[i].neighbour.dpid;
+        // if (debug) console.log('  ('+member+'-cre) port num: '+neighs[i].port_no+' neigh_dpid'+dpidNeigh);
         if(!this.contains(dpidNeigh)) { /* reverse links */
+            // if (debug) console.log('  ('+member+'-cre) !contains');
             // create and add to members
             var newNeigh = new Node(dpidNeigh);
             this.members.push(dpidNeigh);
             this.nodes.push(newNeigh);
             currnode.neighbours.push(newNeigh);
         
-            if (debug) console.log('  ('+member+'-plt) maknegh: '+dpidNeigh);
+            if (debug) console.log('    ('+member+'-plt) maknegh: '+dpidNeigh);
             
             // get port proportions
             var pnum = neighs[i].port_no; // find this ports proportions
             currnode.ports.push(pnum); 
-            if (debug) console.log('  ('+member+'-plt) propprt: '+pnum);
+            if (debug) console.log('    ('+member+'-plt) propprt: '+pnum);
             
             for (var j = 0; j < pfnd.proportion_out.length; j++) {
                 var propNeigh = pfnd.proportion_out[j];
-                if (debug)  console.log('  ('+member+'-plt) tstprop: '+propNeigh.port_no);
+                if (debug)  console.log('    ('+member+'-plt) tstprop: '+propNeigh.port_no);
                 if (parseInt(propNeigh.port_no) == parseInt(pnum)) {
-                    if (debug) console.log('  ('+member+'-plt) addprop: p'+propNeigh.port_no+' '+propNeigh.proportion.toFixed(3));
+                    if (debug) console.log('    ('+member+'-plt) addprop: p'+propNeigh.port_no+' '+propNeigh.proportion.toFixed(3));
                     currnode.proportions.push(propNeigh.proportion);
                     break;
                 }
@@ -485,7 +487,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     // only need to add the proportion to the end of the array, it doesn't need more than that
     if (numNeigh < pfnd.proportion_out.length) {
         var prop_out = pfnd.proportion_out;
-        if (debug) console.log('  ('+member+'-plt) hstexst: #hosts:'+(prop_out.length-numNeigh));
+        if (debug) console.log('    ('+member+'-plt) hstexst: #hosts:'+(prop_out.length-numNeigh));
         
         var neigh_ports = [];
         for (var i = 0; i < neighs.length; i++) {
@@ -498,12 +500,12 @@ var spanningtree = { /* A directed, rooted spanning tree */
         for (var i = 0; i < prop_out.length; i++) {
             if ($.inArray(parseInt(prop_out[i].port_no),neigh_ports)<0) {
                 currnode.proportions.push(prop_out[i].proportion);
-                if (debug) console.log('  ('+member+'-plt) hstport: '+(prop_out[i].port_no));
+                if (debug) console.log('    ('+member+'-plt) hstport: '+(prop_out[i].port_no));
             }
         }
     }
     
-    if (debug) console.log('  ('+member+'-plt) ports:   '+JSON.stringify(currnode.ports)); // may not be in the correct place..
+    if (debug) console.log('    ('+member+'-plt) ports:   '+JSON.stringify(currnode.ports)); // may not be in the correct place..
   },
   create_tree: function(src,live_data) { // create_tree('root', pf_data.live_data);
     measure_latency.event_occured('create_tree_begin',src);
