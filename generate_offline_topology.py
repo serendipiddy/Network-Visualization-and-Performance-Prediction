@@ -152,7 +152,7 @@ def getLinks(switches):
   
 def main(argv):
   
-  # help = 'generate_offline_topology.py -n <num_nodes> -s <num_children_per_node>' -t <topology>
+  help = 'generate_offline_topology.py \n  -n <num_nodes> \n  -t <topology> \n  -s <num_children_per_node> '
   try:
     opts, args = getopt.getopt(argv,"ht:n:s:",[]) # pulls out the specified options, ":" means followed by an argument
   except getopt.GetoptError:
