@@ -597,6 +597,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     
     for (var i = 0; i < currnode.proportions.length; i++) {
         if (debug) console.log('  ('+member+'-gpp)   node:  '+currnode.proportions[i].toFixed(3));
+        if (debug) console.log('  ('+member+'-gpp)   port:  '+currnode.ports[i]);
         proportions[i] = currnode.proportions[i]/sum;
         prop_out = prop_out +' '+proportions[i].toFixed(3);
     }
