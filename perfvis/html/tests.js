@@ -834,10 +834,10 @@ var measure_arrivals = {
     var header = ['reading_count'];
     var nodes = Object.keys(pf_data.node_data).sort();
     for (var i = 0; i<nodes.length; i++) {
-      var dpid = dpid_to_int(nodes[i]);
-      header.push(+'_tot');
-      header.push(+'_live');
-      header.push(+'_adj');
+      var dpid = trim_zero(nodes[i]);
+      header.push(dpid+'_tot');
+      header.push(dpid+'_live');
+      header.push(dpid+'_adj');
     }
     this.own_data.set_header(header);
   },
