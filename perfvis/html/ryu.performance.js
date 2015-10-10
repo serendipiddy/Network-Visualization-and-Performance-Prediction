@@ -319,7 +319,7 @@ var pf_data = {
           'queue_capacity': this.node_data[dpid].queue_capacity + this.node_data[dpid].adjustments.queue_capacity
         }
         /* make sure alterations didn't push below 0 */
-        for(a in ret) {
+        for(var a in ret) {
           if (ret[a] < 0) ret[a] = 0;}
         return ret;
       }

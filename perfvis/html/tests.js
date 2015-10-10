@@ -834,9 +834,10 @@ var measure_arrivals = {
     var header = ['reading_count'];
     var nodes = Object.keys(pf_data.node_data).sort();
     for (var i = 0; i<nodes.length; i++) {
-      var dpid = nodes[i];
-      header.push(dpid+'_live');
-      header.push(dpid+'_adj');
+      var dpid = trim_zero(nodes[i]);
+      header.push(+'_tot');
+      header.push(+'_live');
+      header.push(+'_adj');
     }
     this.own_data.set_header(header);
   },
@@ -847,8 +848,11 @@ var measure_arrivals = {
     var nodes = Object.keys(pf_data.node_data).sort();
     for (var i = 0; i<nodes.length; i++) {
       var dpid = nodes[i];
-      data.push(l_data[dpid].aggregate.arrival_rate); // live
-      data.push(n_data[dpid].adjustments.arrival_rate); // adjustment
+      var l = l_data[dpid].aggregate.arrival_rate); // total
+      var n = n_data[dpid].adjustments.arrival_rate); // adjustment
+      data.push(l + n); // total
+      data.push(l);     // live
+      data.push(n);     // adjustment
     }
     this.own_data.add_row(data);
   },
