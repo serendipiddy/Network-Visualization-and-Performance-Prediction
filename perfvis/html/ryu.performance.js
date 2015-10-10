@@ -570,6 +570,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     
     var currnode = nodes[member];
     
+    if (debug) console.log('  ('+member+'-gpp) dpid: '+currnode.dpid);
     if (debug) console.log('  ('+member+'-gpp) proprtn: '+JSON.stringify(currnode.proportions));
     for (var i = 0; i < currnode.proportions.length; i++) { sum += currnode.proportions[i]; }
     
