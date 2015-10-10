@@ -512,7 +512,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     }
     this.members = [];
     this.nodes = [];
-    var debug = false;
+    var debug = true;
     
     this.members.push(src);
     this.root = new Node(src);
@@ -566,7 +566,7 @@ var spanningtree = { /* A directed, rooted spanning tree */
     var proportions = [];
     var sum = 0; 
     var prop_out = ''; // for debug
-    var debug = false;
+    var debug = true;
     
     var currnode = nodes[member];
     
