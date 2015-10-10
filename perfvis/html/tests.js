@@ -840,6 +840,7 @@ var measure_arrivals = {
       header.push(dpid+'_adj');
     }
     this.own_data.set_header(header);
+    this.count = 0;
   },
   collect_data: function() {
     var data = [this.count++]; // timeStamp
