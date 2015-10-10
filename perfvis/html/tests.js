@@ -835,9 +835,9 @@ var measure_arrivals = {
     var nodes = Object.keys(pf_data.node_data).sort();
     for (var i = 0; i<nodes.length; i++) {
       var dpid = trim_zero(nodes[i]);
-      header.push(dpid+'_tot');
-      header.push(dpid+'_live');
-      header.push(dpid+'_adj');
+      header.push('dp'+dpid+'_tot');
+      header.push('dp'+dpid+'_live');
+      header.push('dp'+dpid+'_adj');
     }
     this.own_data.set_header(header);
     this.count = 0;
