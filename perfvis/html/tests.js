@@ -848,8 +848,8 @@ var measure_arrivals = {
     var nodes = Object.keys(pf_data.node_data).sort();
     for (var i = 0; i<nodes.length; i++) {
       var dpid = nodes[i];
-      var l = l_data[dpid].aggregate.arrival_rate); // total
-      var n = n_data[dpid].adjustments.arrival_rate); // adjustment
+      var l = l_data[dpid].aggregate.arrival_rate; // total
+      var n = n_data[dpid].adjustments.arrival_rate; // adjustment
       data.push(l + n); // total
       data.push(l);     // live
       data.push(n);     // adjustment
