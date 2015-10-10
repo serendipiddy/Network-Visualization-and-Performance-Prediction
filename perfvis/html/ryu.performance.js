@@ -432,8 +432,8 @@ var model = {
 var Node = function(dpid) {
   this.dpid = dpid;
   this.ports = []; // dpid of the port
-  this.proportions = []; // proportion of each node in ports
-  this.neighbours = [];
+  this.proportions = []; // proportion of each node in_ports. Head proportions are switches, tail ones are hosts. Head/switch matches order of neighbours and ports
+  this.neighbours = []; // reference to Node object for neighbours
 }
 var spanningtree = { /* A directed, rooted spanning tree */
   root: '',
@@ -459,17 +459,17 @@ var spanningtree = { /* A directed, rooted spanning tree */
             // if (debug) console.log('  ('+member+'-cre) !contains');
             // create and add to members
             var newNeigh = new Node(dpidNeigh);
+            var pnum = neighs[i].port_no; 
             this.members.push(dpidNeigh);
             this.nodes.push(newNeigh);
             currnode.neighbours.push(newNeigh);
-        
-            if (debug) console.log('    ('+member+'-plt) maknegh: '+dpidNeigh);
-            
-            // get port proportions
-            var pnum = neighs[i].port_no; // find this ports proportions
             currnode.ports.push(pnum); 
+            if (debug) console.log('    ('+member+'-plt) maknegh: '+dpidNeigh);
+        
+            // find this port's (pnum's) proportions
             if (debug) console.log('    ('+member+'-plt) propprt: '+pnum);
             
+            // match the neighbouring switches port, add it to ports and front of proportions
             for (var j = 0; j < pfnd.proportion_out.length; j++) {
                 var propNeigh = pfnd.proportion_out[j];
                 if (debug)  console.log('    ('+member+'-plt) tstprop: '+propNeigh.port_no);
