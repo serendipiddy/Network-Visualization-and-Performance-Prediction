@@ -1,3 +1,6 @@
+offlinetesting = false;
+// offlinetesting = true;
+
 var config = {
   'switch_default': 'openvswitch_vm',
   'model_default':  'mm1_basic',
@@ -43,5 +46,3 @@ var config = {
   'adjustment_keys': ['service_rate','arrival_rate','pnf','queue_capacity'],
 }
 
-// offlinetesting = false;
-offlinetesting = true;
