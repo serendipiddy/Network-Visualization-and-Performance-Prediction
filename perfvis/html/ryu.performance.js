@@ -917,7 +917,7 @@ function initLocal() {
         pf_data.clearAdjustments();
       }
       else if(iter_count == 155) {
-        measure_latency.save('latency_'+spanning_tree.members.length+'_.txt');
+        measure_latency.save('latency_'+spanningtree.members.length+'_.txt');
       }
       else if(iter_count > 160) {
         stopLocal();
