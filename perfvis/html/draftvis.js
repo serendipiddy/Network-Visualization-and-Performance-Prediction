@@ -27,7 +27,7 @@ var populateDPSpecs = function (dpid) {
     $('#queue-capacity').val(data.adjustments['queue_capacity']);
     
     // populateListNum($('#switch-output'),data.output,[]);
-    update_gui();
+    update_gui(true);
 }
 
 var setControlPanelListeners = function() {
@@ -184,10 +184,10 @@ var update_gui_text = function (in_data, out_data) {
 }
 
 var graphs = {};
-graphs.w_border    = 300;
+graphs.w_border    = 2200;
 graphs.h_border    = 250;
 graphs.margin    = {top: 15, right: 20, bottom: 15, left: 40};
-graphs.width     = 300 - graphs.margin.left - graphs.margin.right;
+graphs.width     = 2200 - graphs.margin.left - graphs.margin.right;
 graphs.height    = 100 - graphs.margin.top - graphs.margin.bottom;
 
 var get_graph = function(yLabel) {

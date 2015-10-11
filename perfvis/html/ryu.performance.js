@@ -43,7 +43,7 @@ ws.onmessage = function(event) {
         /* enable control panel */
         $('#loading').hide();
         $('#control-panel').show();
-        update_gui();
+        update_gui(false);
       }
       result = "";
     // } catch(err) {console.log("ERROR"+err);}
@@ -755,18 +755,18 @@ var graphing = {
 graphing.create_graphs(['service_rate', 'arrival_rate', 'queue_capacity'],['load','sojourn','packet_loss']);
 // graphing.create_graphs(['arrival_rate'],[]);
 
-var update_gui = function () { /* Updates the displayed performance values */
-    measure_latency.event_occured('update_gui()_begin','');
+var update_gui = function (is_adjustment) { /* Updates the displayed performance values */
+    if(!is_adjustment) measure_latency.event_occured('update_gui()_begin','');
     var in_data  = pf_data.get_gui_input_all();
-    measure_latency.event_occured('get_input','');
+    if(!is_adjustment) measure_latency.event_occured('get_input','');
     var model_data = model.get_output_all();
-    measure_latency.event_occured('get_model','');
+    if(!is_adjustment) measure_latency.event_occured('get_model','');
     
     update_gui_text(in_data,model_data);
-    measure_latency.event_occured('gui_text','');
+    if(!is_adjustment) measure_latency.event_occured('gui_text','');
     graphing.update_graphs(in_data,model_data);
-    measure_latency.event_occured('update_graphs','');
-    measure_latency.event_occured('update_gui()_end','');
+    if(!is_adjustment) measure_latency.event_occured('update_graphs','');
+    if(!is_adjustment) measure_latency.event_occured('update_gui()_end','');
 }
 
 
@@ -862,12 +862,13 @@ function setSampleArv(arv) {
     }
     pf_data.event_update_statistics(topo.nodes,sample.data);
     console.log('successful update');
-    update_gui();
+    update_gui(true);
 }
 
 // sample = scale_test_linear_100;
 function initLocal() {
-    measure_latency.event_occured("startup_begin",sample.switches.length);
+    measure_latency.event_occured("load_sample_begin",sample.switches.length);
+    measure_latency.event_occured("offline_loop_begin",0);
     // var start_time = new Date()
     topo.initialize({switches: sample.switches, links: sample.links});
     elem.update();
@@ -879,7 +880,8 @@ function initLocal() {
     
     var end_time = new Date()
     // console.log("nodes:"+sample.switches.length+" startup time:"+(end_time.getTime() - start_time.getTime())+"ms");
-    measure_latency.event_occured("startup_end",sample.switches.length);
+    measure_latency.event_occured("offline_loop_end",0);
+    measure_latency.event_occured("load_sample_end",sample.switches.length);
     
     var random_sample_data = function() {
       for (var dpid in sample.data) {
@@ -888,23 +890,39 @@ function initLocal() {
           sample.data[dpid][i].uptime+=2;
     }} };
     
-    var iter_count = 0;
+    var iter_count = 1;
     var num_nodes = sample.switches.length;
       
     offlineLoop = setInterval(function(s) {
       // Date.getTime() returns milliseconds since 1/1/1970 00:00:00 UTC
-      measure_latency.event_occured('offline_loop_begin',(iter_count++));
+      measure_latency.event_occured('offline_loop_begin',(iter_count));
       // var start_time = new Date()
       random_sample_data();
       pf_data.event_update_statistics(topo.nodes,sample.data);
       // console.log('successful update');
       $('#loading').hide();
       $('#control-panel').show();
-      update_gui();
+      update_gui(false);
       // var end_time = new Date()
       // console.log("nodes:"+num_nodes+" run:"+(iter_count++)+" time:"+(end_time.getTime() - start_time.getTime())+"ms");
-      measure_latency.event_occured('offline_loop_end',iter_count);
+      measure_latency.event_occured('offline_loop_end',(iter_count++));
       console.log('offline_loop');
+      if(iter_count > 20 && iter_count < 80) {
+        var keys = Object.keys(pf_data.node_data);
+        var dpid = keys[Math.floor(Math.random() * keys.length)]
+        spanningtree.create_tree(dpid,pf_data.live_data);
+      }
+      else if(iter_count > 90 && iter_count < 150) {
+        spanningtree.adjust_traffic(2*iter_count, spanningtree.get_proportion_prop,pf_data);
+        pf_data.clearAdjustments();
+      }
+      else if(iter_count == 155) {
+        measure_latency.save('latency_'+spanning_tree.members.length+'_.txt');
+      }
+      else if(iter_count > 160) {
+        stopLocal();
+        alert('time to change');
+      }
     }, 1000);
 }
 
