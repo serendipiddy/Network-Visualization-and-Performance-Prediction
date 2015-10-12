@@ -865,6 +865,10 @@ function setSampleArv(arv) {
     update_gui(true);
 }
 
+function reload() {
+  location.reload(true);
+}
+
 // sample = scale_test_linear_100;
 function initLocal() {
     measure_latency.event_occured("load_sample_begin",sample.switches.length);
@@ -907,21 +911,25 @@ function initLocal() {
       // console.log("nodes:"+num_nodes+" run:"+(iter_count++)+" time:"+(end_time.getTime() - start_time.getTime())+"ms");
       measure_latency.event_occured('offline_loop_end',(iter_count++));
       console.log('offline_loop');
-      if(iter_count > 20 && iter_count < 80) {
-        var keys = Object.keys(pf_data.node_data);
-        var dpid = keys[Math.floor(Math.random() * keys.length)]
-        spanningtree.create_tree(dpid,pf_data.live_data);
-      }
-      else if(iter_count > 90 && iter_count < 150) {
-        spanningtree.adjust_traffic(2*iter_count, spanningtree.get_proportion_prop,pf_data);
-        pf_data.clearAdjustments();
-      }
-      else if(iter_count == 155) {
-        measure_latency.save('latency_'+spanningtree.members.length+'_.txt');
-      }
-      else if(iter_count > 160) {
-        stopLocal();
-        alert('time to change');
+      if (latency_testing) {
+        console.log('testing latency, reloading in 160s');
+        if(iter_count > 20 && iter_count < 80) {
+          var keys = Object.keys(pf_data.node_data);
+          var dpid = keys[Math.floor(Math.random() * keys.length)]
+          spanningtree.create_tree(dpid,pf_data.live_data);
+        }
+        else if(iter_count > 90 && iter_count < 150) {
+          spanningtree.adjust_traffic(2*iter_count, spanningtree.get_proportion_prop,pf_data);
+          pf_data.clearAdjustments();
+        }
+        else if(iter_count == 155) {
+          measure_latency.save('latency_'+spanningtree.members.length+'_.txt');
+        }
+        else if(iter_count > 160) {
+          stopLocal();
+          reload(); // force reload from server
+          // alert('time to change');
+        }
       }
     }, 1000);
 }

@@ -882,6 +882,7 @@ var measure_latency = {
     this.own_data.set_header(header);
     this.start_time = (window.performance.now()*1000).toFixed(0);
     this.event_occured('test_init','');
+    latency_testing = true;
   },
   event_occured(name,aux) { 
     var time = (window.performance.now()*1000).toFixed(0) - this.start_time; // timeStamp
@@ -895,8 +896,31 @@ var measure_latency = {
   }
 }
 
+var adjust_traffic_test(val, node, duration, times) {
+  
+}
+
 measure_latency.set();
 
-var test_sample_topologies = [scale_test_tree_1, scale_test_tree_2, scale_test_tree_5, scale_test_tree_10, scale_test_tree_20, scale_test_tree_50, scale_test_tree_100, scale_test_tree_200, scale_test_tree_500, scale_test_tree_1000, scale_test_tree_2000,];
+$.ajax({
+      type: 'POST',
+      url: 'change_sample',
+      data: JSON.stringify({'data':'please'}),
+      success: function(res) {
+          if (res.error == false) {
+            console.log('POST success');
+            console.log(res);
+          }
+          else {
+            console.log('POST error');
+          }
+      },
+      dataType: 'json', 
+      timeout: 120000,
+      contentType: 'application/json; charset=UTF-8'
+    });
 
-var sample = test_sample_topologies[1-1];
+var test_sample_topologies = [scale_test_tree_1, scale_test_tree_2, scale_test_tree_5, scale_test_tree_10, scale_test_tree_20, scale_test_tree_50, scale_test_tree_100, scale_test_tree_200, scale_test_tree_500, scale_test_tree_1000, scale_test_tree_2000];
+
+var sample_idx = 9;
+var sample = test_sample_topologies[sample_idx];
