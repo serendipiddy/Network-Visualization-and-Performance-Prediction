@@ -47,8 +47,8 @@ var elem = {
     force: d3.layout.force()
         .size([CONF.force.width, CONF.force.height])
         .charge(CONF.force.charge)
-        .linkDistance(CONF.force.dist),
-        // .on("tick", _tick),
+        .linkDistance(CONF.force.dist)
+        .on("tick", _tick),
     svg: d3.select("body").append("svg")
         .attr("id", "topology")
         .attr("width", CONF.force.width)
@@ -88,7 +88,7 @@ elem.update = function () {
     this.force
         .nodes(topo.nodes)
         .links(topo.links)
-        // .start();
+        .start();
 
     /* Links */
     this.link = this.link.data(topo.links);

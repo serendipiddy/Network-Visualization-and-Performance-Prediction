@@ -884,6 +884,7 @@ var measure_latency = {
     this.event_occured('test_init','');
   },
   event_occured(name,aux) { 
+    return; // turning this off for now
     var time = (window.performance.now()*1000).toFixed(0) - this.start_time; // timeStamp
     // console.log(time)
     if (name in this.events) this.events[name]++;
@@ -895,8 +896,8 @@ var measure_latency = {
   }
 }
 
-measure_latency.set();
+// measure_latency.set();
 
-var test_sample_topologies = [scale_test_tree_1, scale_test_tree_2, scale_test_tree_5, scale_test_tree_10, scale_test_tree_20, scale_test_tree_50, scale_test_tree_100, scale_test_tree_200, scale_test_tree_500, scale_test_tree_1000, scale_test_tree_2000,];
+// var test_sample_topologies = [scale_test_tree_1, scale_test_tree_2, scale_test_tree_5, scale_test_tree_10, scale_test_tree_20, scale_test_tree_50, scale_test_tree_100, scale_test_tree_200, scale_test_tree_500, scale_test_tree_1000, scale_test_tree_2000,];
 
-var sample = test_sample_topologies[1-1];
+// var sample = test_sample_topologies[1-1];
