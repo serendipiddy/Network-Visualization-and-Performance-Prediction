@@ -826,9 +826,11 @@ function OutputObj() {
 
 var measure_arrivals = {
   timer: '',
+  is_set: false,
   count: 0,
   own_data: '',
   set: function() {
+    this.is_set = true;
     this.own_data = new OutputObj();
     this.own_data.reset();
     var header = ['reading_count'];
@@ -842,7 +844,11 @@ var measure_arrivals = {
     this.own_data.set_header(header);
     this.count = 0;
   },
-  collect_data: function() {
+  collect_data: function() {  
+    if (!this.is_set) {
+      console.log('need to call .set()');
+      return;
+    }
     var data = [this.count++]; // timeStamp
     var n_data = pf_data.node_data;
     var l_data = pf_data.live_data;
@@ -857,14 +863,25 @@ var measure_arrivals = {
     }
     this.own_data.add_row(data);
   },
-  start: function() {
+  start: function(auto, opts) {
+    if (!this.is_set) {
+      console.log('need to call .set()');
+      return;
+    }
     var self = this;
+    if (auto) {
+      setTimeout(function () {
+        console.log('Starting adjustments');
+        adjust_traffic_test(opts.delta, opts.node, opts.duration, opts.times, opts.endtime, opts.filename);
+      }, 10000);
+    }
     self.timer = setInterval(function(s) {
       self.collect_data();
-    }, 1000);
+    }, 500);
   },
   stop: function(timer) {
     clearInterval(timer);
+    this.is_set = false;
   },
   save: function(filename) {
     this.own_data.save_file_table(filename);
@@ -884,7 +901,7 @@ var measure_latency = {
     this.event_occured('test_init','');
     latency_testing = true;
   },
-  event_occured(name,aux) { 
+  event_occured: function(name,aux) { 
     return; // turning this off for now
     var time = (window.performance.now()*1000).toFixed(0) - this.start_time; // timeStamp
     // console.log(time)
@@ -897,41 +914,48 @@ var measure_latency = {
   }
 }
 
-function do_the_adjusting(delta) {
-  spanning_tree.adjust_traffic(delta, spanning_tree.get_proportion_prop, pf_data);
+function do_the_adjusting(delta, duration) {
+  console.log('setting delta:'+delta+' for '+duration+'s');
+  
+  spanningtree.adjust_traffic(delta, spanningtree.get_proportion_prop, pf_data);
+  setTimeout(function () {
+    clear_stuff();
+    console.log('time up: adjustment cleared');
+  }, duration*1000);
 }
 
 function clear_stuff() {
   pf_data.clearAdjustments();
 }
 
-var adjust_loop = ''
-var adjust_traffic_test(delta, node, duration, times) {
-  spanning_tree.create_tree(node, pf_data.live_data);
-  var i = 0;
+
+var adjust_loop = '';
+function adjust_traffic_test(delta, node, duration, times, endtime,filename) {
+  spanningtree.create_tree(node, pf_data.live_data);
+  var i = 1;
+  do_the_adjusting(delta, duration);
   
   adjust_loop = setInterval(function(s) {
     i++;
     if (i > times) {
-      stopAdjust();
-      return
-    }
+      stopAdjust(endtime,filename);
+      return;
+    }  
     
-    console.log('setting delta:'+delta);
-    do_the_adjusting(delta);
-    
-    setTimeout(function () {
-      clear_stuff();
-      console.log('stuff cleared');
-    }, duration*1000);
-    
+    do_the_adjusting(delta, duration);
   }, duration*1000 + 10000);
 }
-function stopAdjust() {
+function stopAdjust(endtime,filename) {
+    console.log('stopping adjust')
+    // alert('stopping');
     clearInterval(adjust_loop)
+    setTimeout(function () {
+      measure_arrivals.stop(measure_arrivals.timer)
+      measure_arrivals.save(filename)
+    }, endtime*1000);
 }
 
-$.ajax({
+/* $.ajax({
       type: 'POST',
       url: 'change_sample',
       data: JSON.stringify({'data':'please'}),
@@ -947,9 +971,9 @@ $.ajax({
       dataType: 'json', 
       timeout: 120000,
       contentType: 'application/json; charset=UTF-8'
-    });
+    });*/
 
-=======
+// =======
 // measure_latency.set();
 
 // var test_sample_topologies = [scale_test_tree_1, scale_test_tree_2, scale_test_tree_5, scale_test_tree_10, scale_test_tree_20, scale_test_tree_50, scale_test_tree_100, scale_test_tree_200, scale_test_tree_500, scale_test_tree_1000, scale_test_tree_2000,];
