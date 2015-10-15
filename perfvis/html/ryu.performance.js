@@ -137,7 +137,8 @@ var pf_data = {
               var new_node = this.new_node(dpid,0,100,true);
               this.node_data[dpid] = new_node.node;
               this.live_data[dpid] = new_node.live;
-              menu_addDp(dpid);
+              
+              vis.menu_addDp(dpid);
             } 
             
             /* If it shouldn't exist, hide it 
@@ -362,7 +363,7 @@ var pf_data = {
           }
         }
       }
-    }
+    },
 }
 
 var edit_mode = {
@@ -630,146 +631,6 @@ var spanningtree = { /* A directed, rooted spanning tree */
 
 
 
-/* Graphing currently connects to the GUI vis file */
-var graphing = {
-  graphs: [],
-  pf_labels: [],
-  model_labels: [],
-  create_graphs: function(pf_labels, model_labels){
-    this.graphs = [];
-    this.pf_labels = [];
-    this.model_labels = [];
-    for (var l = 0; l<pf_labels.length; l++) {
-      this.graphs.push(get_graph(pf_labels[l]));
-      this.pf_labels.push(pf_labels[l]);
-    }
-    for (var l = 0; l<model_labels.length; l++) {
-      this.graphs.push(get_graph(model_labels[l]));
-      this.model_labels.push(model_labels[l]);
-    }
-  },
-  get_graph_data: function (pf_out, model_data) {
-    /* for each input/output display a graph grouping like-puts */
-    
-    /* parameter structure
-    // var pf_labels = ['service_rate', 'arrival_rate', 'queue_capacity'];
-    // var model_labels = ['load','sojourn'];
-    
-    console.log(JSON.stringify(pf_out));
-    console.log(JSON.stringify(model_data));
-    {
-      "0000000000000001":{"service_rate":56625,"arrival_rate":13041,"queue_capacity":0},
-      "0000000000000002":{"service_rate":56625,"arrival_rate":15577,"queue_capacity":0}
-    }
-    {
-      "0000000000000001":{"load":0.2303046357615894,"length":0.29921530837004406,"sojourn":0.000022944199706314243},
-      "0000000000000002":{"load":0.2750905077262693,"length":0.37948255700643146,"sojourn":0.000024361722861040732}
-    }
-    */
-    
-    /* Construct zipGraphData() input */
-    var graph_data = {
-      y_labels: [],
-      editable: [],
-      dpids: [],
-      series: {}
-    };
-    
-    for (var i = 0; i< this.pf_labels.length; i++)  {
-      graph_data.y_labels.push(this.pf_labels[i]);
-      graph_data.editable.push(true);
-      graph_data.series[this.pf_labels[i]] = [];
-    }
-    for (var i = 0; i< this.model_labels.length; i++) {
-      graph_data.y_labels.push(this.model_labels[i]);
-      graph_data.editable.push(false);
-      graph_data.series[this.model_labels[i]] = [];
-    }
-    
-    for (var dpid in pf_out) {
-      graph_data.dpids.push(dpid);
-      for (var i = 0; i< this.pf_labels.length; i++) {
-        var lab = this.pf_labels[i];
-        graph_data.series[lab]
-          .push(pf_out[dpid][lab]);
-      }
-      for (var i = 0; i< this.model_labels.length; i++) {
-        var lab = this.model_labels[i];
-        graph_data.series[lab]
-          .push(model_data[dpid][lab]);
-      }
-    }
-    
-    // console.log(JSON.stringify(graph_data,null,2));
-    
-    return this.zipGraphData(graph_data);
-  },
-  update_graphs: function (pf_out, model_data) {
-    var data = this.get_graph_data(pf_out, model_data);
-    for(var i = 0; i<this.graphs.length; i++) {
-      update_graph(this.graphs[i],data[i].data);
-    }
-  },
-  zipGraphData: function(g_in) { // zips up data, returning an object for each graph
-    /*    getGraphData_input = {
-        y_labels : ['label_a','label_b'],
-        editable : [true,false],
-        dpids    : [''],
-        series : {
-            // How to include the altered input? Should create a stacked graph first
-            // label_a = [value: alt_value:,] ?
-            label_a = [value:,],
-            label_b = [value:,],
-            ...
-          },
-        }
-    */
-    
-    // console.log(JSON.stringify(g_in,null,2));
-    
-    var zipped = [];
-    var series = [];
-    for (var l = 0; l<g_in.y_labels.length; l++) {
-        series[l] = [];
-    }
-    for (var dp = 0; dp<g_in.dpids.length ; dp++) {
-        for (var l = 0; l<g_in.y_labels.length; l++) {
-            series[l].push({
-                dpid: g_in.dpids[dp],
-                value: g_in.series[g_in.y_labels[l]][dp],
-            });
-        }
-    }
-    for (var l = 0; l<g_in.y_labels.length; l++) {
-        zipped.push ({
-            label: g_in.y_labels[l],
-            data: series[l],
-            editable: g_in.editable[l],
-        });
-    }
-    return zipped;
-  },
-}
-
-/* Select the data to graph */
-graphing.create_graphs(['service_rate', 'arrival_rate', 'queue_capacity'],['load','sojourn','packet_loss']);
-// graphing.create_graphs(['arrival_rate'],[]);
-
-var update_gui = function (is_adjustment) { /* Updates the displayed performance values */
-    if(!is_adjustment) measure_latency.event_occured('update_gui()_begin','');
-    var in_data  = pf_data.get_gui_input_all();
-    if(!is_adjustment) measure_latency.event_occured('get_input','');
-    var model_data = model.get_output_all();
-    if(!is_adjustment) measure_latency.event_occured('get_model','');
-    
-    update_gui_text(in_data,model_data);
-    if(!is_adjustment) measure_latency.event_occured('gui_text','');
-    graphing.update_graphs(in_data,model_data);
-    if(!is_adjustment) measure_latency.event_occured('update_graphs','');
-    if(!is_adjustment) measure_latency.event_occured('update_gui()_end','');
-}
-
-
 /*
   Functions and data for offline editing:
     - Sample: samples stat and topo data
@@ -792,7 +653,7 @@ var sample = {
     ],
     "0000000000000003": [
       {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.1, "depart_rate": 201.1, "total_tx": 100, "total_rx": 100, "uptime": 0},
-      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
+      // {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
     ]
   },
   controller: {
@@ -822,7 +683,7 @@ var sample = {
     { "dpid": "0000000000000003",
       "ports": [
         {"hw_addr": "82:bd:da:72:ca:21", "name": "s3-eth1", "port_no": "00000001", "dpid": "0000000000000003"}, 
-        {"hw_addr": "de:14:29:11:01:22", "name": "s3-eth2", "port_no": "00000002", "dpid": "0000000000000003"}
+        // {"hw_addr": "de:14:29:11:01:22", "name": "s3-eth2", "port_no": "00000002", "dpid": "0000000000000003"}
       ]}
   ],
   links: [
@@ -834,7 +695,8 @@ var sample = {
       "src": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}, 
       "dst": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}
     }, 
-    {    /* 1 - 3 */
+  /*{
+      'name': '1 - 3'
       "src": {"hw_addr": "02:5d:c1:3d:2f:23", "name": "s1-eth3", "port_no": "00000003", "dpid": "0000000000000001"}, 
       "dst": {"hw_addr": "82:bd:da:72:ca:21", "name": "s3-eth1", "port_no": "00000002", "dpid": "0000000000000003"}
     },
@@ -842,7 +704,8 @@ var sample = {
       "src": {"hw_addr": "82:bd:da:72:ca:21", "name": "s3-eth1", "port_no": "00000002", "dpid": "0000000000000003"}, 
       "dst": {"hw_addr": "02:5d:c1:3d:2f:23", "name": "s1-eth3", "port_no": "00000003", "dpid": "0000000000000001"}
     },
-    {    /* 2 - 3 */
+  */
+    { 
       "src": {"hw_addr": "de:14:29:11:01:23", "name": "s2-eth3", "port_no": "00000003", "dpid": "0000000000000002"}, 
       "dst": {"hw_addr": "de:14:29:11:01:22", "name": "s3-eth2", "port_no": "00000002", "dpid": "0000000000000003"}
     },
@@ -911,7 +774,7 @@ function initLocal() {
       // console.log("nodes:"+num_nodes+" run:"+(iter_count++)+" time:"+(end_time.getTime() - start_time.getTime())+"ms");
       measure_latency.event_occured('offline_loop_end',(iter_count++));
       console.log('offline_loop');
-      if (latency_testing) {
+      if (measure_latency.latency_testing) {
         console.log('testing latency, reloading in 160s');
         if(iter_count > 20 && iter_count < 80) {
           var keys = Object.keys(pf_data.node_data);

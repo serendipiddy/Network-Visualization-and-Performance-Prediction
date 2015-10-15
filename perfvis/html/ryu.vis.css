@@ -6,12 +6,36 @@ html, body {
 #side-bar {
     width: 200px;
     border-right: 1px solid #000000;
-    margin: 2px;
+    /* margin: 2px; */
     padding: 5px;
     /* height: 100%; */
     overflow: hidden;
     float: left;
 }
+
+
+#graph-panel {
+  float: left;
+  display: block;
+  width: 300px;
+  padding: 0px;
+  margin:  0px;
+}
+
+#view-perf {
+  padding: 5px;
+}
+
+#view-perf {
+  padding: 5px;
+}
+
+
+h2 {
+  margin: 2px;
+}
+
+
 #loading {
   display: block;
   border: 1px solid #000000;
@@ -38,6 +62,10 @@ html, body {
 /* .ul-title {
   font-weight: bold;
 } */
+
+#switch-input .adjustable {
+  width: 100px;
+}
 
 /* topology */
 #topology {  
@@ -74,15 +102,6 @@ body {
   font: 10px sans-serif;
 }
 
-/* grouped bar graph */
-
-#graph-panel {
-  float: left;
-  display: block;
-  width: 300px;
-  padding: 5px;
-  margin:  0px;
-}
 
 .graph {
   /* height: 250; */

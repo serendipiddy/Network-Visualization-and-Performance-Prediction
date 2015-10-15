@@ -45,3 +45,9 @@ var mm1k_basic = {
 }
 
 config.get_model['mm1k_basic'] = mm1k_basic;
+config.queueing_models['mm1k_basic'] = { 
+    'description': 'Simple M/M/1/K model, runs per node',
+    'model_in':  [ 'service_rate', 'arrival_rate', 'queue_capacity' ],
+    'model_out': [ 'load', 'length', 'sojourn', 'packet_loss' ],
+    'rho_support': 'positive', /* Supports any positive rho [0,+inf] */
+  }

@@ -11,19 +11,20 @@
 <script src="./mm1.js" charset="utf-8"></script>
 <script src="./mm1k.js" charset="utf-8"></script>
 <script src="./draftvis.js" id="page-layout" charset="utf-8"></script>
-<!-- <script src="./scale_test_nodes_2.js" charset="utf-8"></script> -->
+<script src="./scale_test_nodes_2.js" charset="utf-8"></script>
 <script src="./tests.js" charset="utf-8"></script>
 </head>
 <body>
-<h1>Ryu Performance Viewer</h1>
+<h1>SDN Network Performance Viewer</h1>
 
 <div id="side-bar">
   <h2 id="loading">Loading..</h2>
   <div id='control-panel' style="display:none">
     <h2>Control Panel</h2>
     <!-- <button id="editmode" >Edit mode</button> -->
-    <button id="clearadj" onclick='vis_clearAdjustments()'>Clear Adjustments</button>
-    <!-- <button id="exponSmoothing" onclick='vis_setExponSmoothing()'>Toggle ExpSmth (on)</button> -->
+    <button id="clearadj" onclick='vis.clearAdjustments()'>Clear Adjustments</button>
+    <!-- <button id="toggletopo" onclick='vis.toggleTopo()'>Toggle View</button> -->
+    <!-- <button id="exponSmoothing" onclick='vis.setExponSmoothing()'>Toggle ExpSmth (on)</button> -->
     <select id="node-select" class="panel">
       <option value="default">Select Node</option>
     </select>
@@ -46,9 +47,53 @@
       </ul>
       <h3>Input</h3>
       <ul id="switch-input">
-        <li>Arrival: <input id="arrival-rate" type="number" name="arrival" step="100"></li>
-        <li>Service: <input id="service-rate" type="number" name="service" step="100"></li>
-        <li>Queue capacity: <input id="queue-capacity" type="number" name="capacity"></li>
+        <li>Arrival: 
+          <table>
+          <col width="100">
+          <col width="20">
+          <col width="100">
+          <col width="20">
+          <tr>
+            <td id='node-arrival-rate' class='adjustable' align='center'>0</td>
+            <td> + </td>
+            <td>
+              <input class='adjustable' id="arrival-rate" type="number" name="arrival" step="100">
+            </td> 
+            <td>/s</td>
+          </tr>
+          </table>
+        </li>
+        <li>Service: 
+          <table>
+          <col width="100">
+          <col width="20">
+          <col width="100">
+          <col width="20">
+          <tr>
+            <td id='node-service-rate' class='adjustable' align='center'>0</td>
+            <td> + </td>
+            <td>
+              <input class='adjustable' id="service-rate" type="number" name="service" step="100">
+            </td> 
+            <td>/s</td>
+          </tr>
+          </table>
+        </li>
+        <li>Queue capacity: 
+          <table>
+          <col width="100">
+          <col width="20">
+          <col width="100">
+          <col width="20">
+          <tr>
+            <td id='queue-capacity-num' class='adjustable' align='center'>0</td>
+            <td> + </td>
+            <td>
+              <input  class='adjustable' id="queue-capacity" type="number" name="capacity"></li>
+            </td> 
+          <td></td>
+          </tr>
+          </table>
         <li>Cascade: 
           <select id='select-cascade'>
             <option val="get_proportion_prop">Proportional</option>
@@ -58,8 +103,18 @@
     </div>
   </div>
 </div>
-<div id="graph-panel">
-<!-- <svg class="chart"></svg> -->
+<!-- <div id='view-perf' style='display:none'> -->
+<div id='view-perf'>
+  <h2>Average Network Performance</h2>
+  <div id='network-perf'>
+    
+  </div>
+  <div id="graph-panel">
+  </div>
+</div>
+<div id='view-topo'>
+  <!-- <h2>Network Topology</h2> -->
+  
 </div>
 <script src="./ryu.perfvis.js" charset="utf-8"></script>
 <script src="./ryu.performance.js" charset="utf-8"></script>

@@ -22,3 +22,9 @@ var mm1_basic = {
 }
 
 config.get_model['mm1_basic'] = mm1_basic;
+config.queueing_models['mm1_basic'] = { 
+    'description': 'Simple M/M/1 model, runs per node',
+    'model_in':  [ 'service_rate', 'arrival_rate' ],
+    'model_out': [ 'load', 'length', 'sojourn' ],
+    'rho_support': 'unit_interval', /* Only supports rho [0,1) */
+  }

@@ -978,5 +978,5 @@ function stopAdjust(endtime,filename) {
 
 // var test_sample_topologies = [scale_test_tree_1, scale_test_tree_2, scale_test_tree_5, scale_test_tree_10, scale_test_tree_20, scale_test_tree_50, scale_test_tree_100, scale_test_tree_200, scale_test_tree_500, scale_test_tree_1000, scale_test_tree_2000,];
 
-// var sample_idx = 9;
+// var sample_idx = 2;
 // var sample = test_sample_topologies[sample_idx];

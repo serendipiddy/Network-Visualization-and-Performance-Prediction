@@ -5,7 +5,8 @@ var CONF = {
     },
     force: {
         // width: 700,
-        width: $(window).width()-250-graphs.w_border, // 250 is for control panel and scroll bar
+        // width: $(window).width()-250, // 250 for control panel
+        width: $(window).width()-250-vis.graphs.w_border, // 250 is for control panel and scroll bar
         height: 500,
         dist: 200,
         charge: -600
@@ -49,7 +50,7 @@ var elem = {
         .charge(CONF.force.charge)
         .linkDistance(CONF.force.dist)
         .on("tick", _tick),
-    svg: d3.select("body").append("svg")
+    svg: d3.select("#view-topo").append("svg")
         .attr("id", "topology")
         .attr("width", CONF.force.width)
         .attr("height", CONF.force.height),
@@ -134,7 +135,7 @@ elem.update = function () {
     */
     
     /* Statistics */
-    set_gui_text(this, topo.nodes);
+    vis.set_gui_text(this, topo.nodes);
         
     /* Ports */
     var ports = topo.get_ports();
