@@ -891,6 +891,7 @@ var measure_arrivals = {
 var measure_latency = {
   events: {}, // name -> number
   start_time: 0,
+  latency_testing: false,
   set: function() {
     this.own_data = new OutputObj();
     this.own_data.reset();
@@ -899,10 +900,10 @@ var measure_latency = {
     this.own_data.set_header(header);
     this.start_time = (window.performance.now()*1000).toFixed(0);
     this.event_occured('test_init','');
-    latency_testing = true;
+    this.latency_testing = true;
   },
   event_occured: function(name,aux) { 
-    return; // turning this off for now
+    if (!this.latency_testing)return; // turning this off for now
     var time = (window.performance.now()*1000).toFixed(0) - this.start_time; // timeStamp
     // console.log(time)
     if (name in this.events) this.events[name]++;
@@ -955,7 +956,8 @@ function stopAdjust(endtime,filename) {
     }, endtime*1000);
 }
 
-/* $.ajax({
+/**/
+    $.ajax({
       type: 'POST',
       url: 'change_sample',
       data: JSON.stringify({'data':'please'}),
@@ -971,12 +973,13 @@ function stopAdjust(endtime,filename) {
       dataType: 'json', 
       timeout: 120000,
       contentType: 'application/json; charset=UTF-8'
-    });*/
+    });
+/**/
 
 // =======
-// measure_latency.set();
+measure_latency.set();
 
-// var test_sample_topologies = [scale_test_tree_1, scale_test_tree_2, scale_test_tree_5, scale_test_tree_10, scale_test_tree_20, scale_test_tree_50, scale_test_tree_100, scale_test_tree_200, scale_test_tree_500, scale_test_tree_1000, scale_test_tree_2000,];
+// var test_sample_topologies = [scale_test_tree_1, scale_test_tree_2, scale_test_tree_5, scale_test_tree_10, scale_test_tree_20, scale_test_tree_50, scale_test_tree_100, scale_test_tree_200, scale_test_tree_1500, scale_test_tree_2000,];
 
 // var sample_idx = 2;
-// var sample = test_sample_topologies[sample_idx];
+// var sample = scale_test_tree_1500; // test_sample_topologies[sample_idx];

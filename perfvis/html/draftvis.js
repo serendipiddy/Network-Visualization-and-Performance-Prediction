@@ -15,6 +15,11 @@ $(document).ready(function() {
     vis.setControlPanelListeners();
     var smoothing = pf_data.exponSmoothing;
     graphing.create_graphs(graphs_to_create.input,graphs_to_create.output);
+    
+    // sort dpids
+    // $("#node-select").html($("#node-select option").sort(function (a, b) {
+          // return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
+      // }))
 });
 
 // var vis = {
@@ -153,9 +158,10 @@ var vis = {
   menu_addDp: function(dpid) {
       var op = $('<option></option>').attr('value',dpid).text(dpid);
       $('#node-select').append(op);
-      $("#node-select").html($("#node-select option").sort(function (a, b) {
-          return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
-      }))
+      /* slows initial load significantly.. */
+      // $("#node-select").html($("#node-select option").sort(function (a, b) {
+          // return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
+      // }))
   },
   topo_view: true,
   toggleTopo: function() {
@@ -333,11 +339,11 @@ var vis = {
   },
 
   graphs: {
-    w_border: 300,
+    w_border: sample.switches.length > 250 ? sample.switches.length + 100 : 300,
     h_border: 250,
     margin:   {top: 15, right: 20, bottom: 20, left: 60},
     init: function() {
-      this.width= 300 - this.margin.left - this.margin.right;
+      this.width= this.w_border - this.margin.left - this.margin.right;
       this.height= 100 - this.margin.top - this.margin.bottom;
     }
   },

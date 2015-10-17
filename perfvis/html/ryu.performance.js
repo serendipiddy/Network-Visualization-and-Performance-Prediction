@@ -638,8 +638,8 @@ var spanningtree = { /* A directed, rooted spanning tree */
     - stopLocal: kills the random loop
     - setSampleData: sets the arrival rate of the sample data, stops local loop
 */
-
-var sample = {
+// var sample = scale_test_tree_1500;
+var sample2 = {
   data: {
     "0000000000000001": [
       {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.1, "depart_rate": 101.1, "total_tx": 100, "total_rx": 100, "uptime": 0},
@@ -759,7 +759,11 @@ function initLocal() {
     
     var iter_count = 1;
     var num_nodes = sample.switches.length;
-      
+    
+    if (measure_latency.latency_testing) {
+        console.log('testing latency, reloading in 160s');
+    }
+    
     offlineLoop = setInterval(function(s) {
       // Date.getTime() returns milliseconds since 1/1/1970 00:00:00 UTC
       measure_latency.event_occured('offline_loop_begin',(iter_count));
@@ -775,14 +779,15 @@ function initLocal() {
       measure_latency.event_occured('offline_loop_end',(iter_count++));
       console.log('offline_loop');
       if (measure_latency.latency_testing) {
-        console.log('testing latency, reloading in 160s');
-        if(iter_count > 20 && iter_count < 80) {
+        // console.log('testing latency, reloading in 160s');
+        // if(iter_count > 20 && iter_count < 80) {
+        if(iter_count > 20 && iter_count < 150) {
           var keys = Object.keys(pf_data.node_data);
           var dpid = keys[Math.floor(Math.random() * keys.length)]
           spanningtree.create_tree(dpid,pf_data.live_data);
-        }
-        else if(iter_count > 90 && iter_count < 150) {
-          spanningtree.adjust_traffic(2*iter_count, spanningtree.get_proportion_prop,pf_data);
+        // }
+        // else if(iter_count > 90 && iter_count < 150) {
+          spanningtree.adjust_traffic(100*iter_count, spanningtree.get_proportion_prop,pf_data);
           pf_data.clearAdjustments();
         }
         else if(iter_count == 155) {

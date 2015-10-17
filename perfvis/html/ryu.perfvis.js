@@ -6,7 +6,7 @@ var CONF = {
     force: {
         // width: 700,
         // width: $(window).width()-250, // 250 for control panel
-        width: $(window).width()-250-vis.graphs.w_border, // 250 is for control panel and scroll bar
+        width: $(window).width()-250-300, // for tests, make this static -vis.graphs.w_border, // 250 is for control panel and scroll bar
         height: 500,
         dist: 200,
         charge: -600
