@@ -956,7 +956,7 @@ function stopAdjust(endtime,filename) {
     }, endtime*1000);
 }
 
-/**/
+/*
     $.ajax({
       type: 'POST',
       url: 'change_sample',
@@ -974,10 +974,10 @@ function stopAdjust(endtime,filename) {
       timeout: 120000,
       contentType: 'application/json; charset=UTF-8'
     });
-/**/
+*/
 
 // =======
-measure_latency.set();
+// measure_latency.set();
 
 // var test_sample_topologies = [scale_test_tree_1, scale_test_tree_2, scale_test_tree_5, scale_test_tree_10, scale_test_tree_20, scale_test_tree_50, scale_test_tree_100, scale_test_tree_200, scale_test_tree_1500, scale_test_tree_2000,];
 
