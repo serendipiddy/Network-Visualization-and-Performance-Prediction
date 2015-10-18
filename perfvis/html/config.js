@@ -24,6 +24,8 @@ var config = {
     }
   },
   'queueing_models': { /* each model is stored in 'model/name.js' */ },
+  'graphed_inputs': [],
+  'graphed_outputs': [],
   'node_status': [ 'active', 'inactive', 'removed', 'additional' ],
   'config_keys': ['switch_brand', 'queueing_model', 'service_rate', 'pnf', 'queue_capacity'],
   'adjustment_keys': ['service_rate','arrival_rate','pnf','queue_capacity'],
