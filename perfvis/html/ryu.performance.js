@@ -134,7 +134,7 @@ var pf_data = {
         for (var dpid in update) { 
             /* Doesn't exist, make it */
             if (!this.node_data[dpid]) {
-              var new_node = this.new_node(dpid,0,100,true);
+              var new_node = this.new_node(dpid,0,0,true);
               this.node_data[dpid] = new_node.node;
               this.live_data[dpid] = new_node.live;
               

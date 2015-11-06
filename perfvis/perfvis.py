@@ -7,6 +7,7 @@ from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER, CONFIG_DISP
 from ryu.controller.handler import set_ev_cls
 from ryu.controller import ofp_event
 from ryu.lib.packet.ether_types import ETH_TYPE_LLDP
+from ryu.lib.packet import (packet,  ethernet)
 
 from socket import error as SocketError
 from tinyrpc.exc import InvalidReplyError
@@ -185,13 +186,14 @@ class PerformanceServerApp(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
+        ''' Counts the packet_in requests '''
         dp = ev.msg.datapath
         dpid = dpid_to_str(dp.id)
-        # # filter LLDP packets.. or not, because while there isn't a reply, they place a load on the controller.
-        # pkt = packet.Packet(msg.data)
-        # eth = pkt.get_protocols(ethernet.ethernet)[0]
-        # if eth.ethertype == ether_types.ETH_TYPE_LLDP:
-        #   return
+        # # filter LLDP packets.. ## or not, because while there isn't a reply, they place a load on the controller.
+        pkt = packet.Packet(ev.msg.data)
+        eth = pkt.get_protocols(ethernet.ethernet)[0]
+        if eth.ethertype == ETH_TYPE_LLDP:
+          return
         
         # controller_count++
         self.total_packet_in = 1 + self.total_packet_in 

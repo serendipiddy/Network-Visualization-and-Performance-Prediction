@@ -916,22 +916,62 @@ var measure_latency = {
 }
 
 function do_the_adjusting(delta, duration) {
-  console.log('setting delta:'+delta+' for '+duration+'s');
+  console.log('setting delta: '+delta+' for '+duration+'s');
   
   spanningtree.adjust_traffic(delta, spanningtree.get_proportion_prop, pf_data);
   setTimeout(function () {
     clear_stuff();
     console.log('time up: adjustment cleared');
-  }, duration*1000);
+  }, duration);
 }
 
 function clear_stuff() {
   pf_data.clearAdjustments();
 }
 
+function flip_loop() {
+  var duration = 20000;
+  var wait = 10000;
+  var count = 0;
+  var limit = 2;
+  var the_timer = '';
+  var filename = 'adj_auto_';
+  
+  var func = function(s) {
+    count++;
+    measure_arrivals.set();
+    measure_arrivals.start(false,'');
+    
+    setTimeout(function () {
+        console.log('Make tree 0002 '+count);
+        spanningtree.create_tree('0000000000000002', pf_data.live_data);
+        do_the_adjusting(100, duration);
+    }, wait);
+    
+    setTimeout(function () {
+        console.log('Make tree 0001 '+count);
+        spanningtree.create_tree('0000000000000001', pf_data.live_data);
+        do_the_adjusting(100, duration);
+    }, wait+duration+wait);
+
+    setTimeout(function () {
+        console.log('Stop adjust and save');
+        measure_arrivals.stop(measure_arrivals.timer)
+        measure_arrivals.save(filename)
+    }, wait+duration+wait+duration+duration*3+wait*4);
+
+    if (count >= limit) {
+      console.log('Stopping loop');
+      clearInterval(the_timer);
+    }
+  };
+  
+  func();
+  the_timer = setInterval(func, duration*5+wait*6);
+}
 
 var adjust_loop = '';
-function adjust_traffic_test(delta, node, duration, times, endtime,filename) {
+function adjust_traffic_test(delta, node, duration, times, endtime, filename) {
   spanningtree.create_tree(node, pf_data.live_data);
   var i = 1;
   do_the_adjusting(delta, duration);
