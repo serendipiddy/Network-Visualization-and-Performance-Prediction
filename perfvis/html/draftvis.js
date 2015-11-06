@@ -17,9 +17,9 @@ $(document).ready(function() {
     graphing.create_graphs(graphs_to_create.input,graphs_to_create.output);
     
     // sort dpids
-    // $("#node-select").html($("#node-select option").sort(function (a, b) {
-          // return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
-      // }))
+    $("#node-select").html($("#node-select option").sort(function (a, b) {
+          return a.text == b.text ? 0 : a.text < b.text ? -1 : 1
+      }))
 });
 
 // var vis = {

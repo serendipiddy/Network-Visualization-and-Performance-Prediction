@@ -987,7 +987,7 @@ function adjust_traffic_test(delta, node, duration, times, endtime, filename) {
   }, duration*1000 + 10000);
 }
 function stopAdjust(endtime,filename) {
-    console.log('stopping adjust')
+    console.log('stopping adjust in '+endtime*1000)
     // alert('stopping');
     clearInterval(adjust_loop)
     setTimeout(function () {

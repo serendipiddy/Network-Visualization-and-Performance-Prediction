@@ -24,7 +24,7 @@ measure_latency.event_occured('loading_topofile_begin');
 var ws = new WebSocket("ws://" + location.host + "/v1.0/topology/ws");
 ws.onmessage = function(event) {
     var data = JSON.parse(event.data);
-    console.log("WS.ONMESSAGE()"+event.data);
+    // console.log("WS.ONMESSAGE()"+event.data);
     
     var result = rpc[data.method](data.params);
 
