@@ -339,7 +339,8 @@ var vis = {
   },
 
   graphs: {
-    w_border: sample.switches.length > 250 ? sample.switches.length + 100 : 300,
+    // w_border: sample.switches.length > 250 ? sample.switches.length + 100 : 300,
+    w_border: 300,
     h_border: 250,
     margin:   {top: 15, right: 20, bottom: 20, left: 60},
     init: function() {
@@ -388,6 +389,28 @@ var vis = {
           .attr('class', 'y-axis')
           .call(yAxis);
           
+      label_text = '';
+      
+      switch(yLabel) {
+          case "service_rate": 
+              label_text = yLabel+' (packet/s)';
+              break;
+          case "arrival_rate": 
+              label_text = yLabel+' (packet/s)';
+              break;
+          case "sojourn": 
+              label_text = yLabel+' (s)';
+              break;
+          case "packet_loss": 
+              label_text = yLabel+' (packets)';
+              break;
+          case "queue_capacity": 
+              label_text = yLabel+' (packets)';
+              break;
+          default: 
+              label_text = yLabel;
+      }
+          
       svg.append('text')
           // .attr('transform','rotate(-90)')
           .attr('transform','translate(0,-15)')
@@ -395,7 +418,7 @@ var vis = {
           .attr('dy', '.71em') // similar to previous..? fine tuning?
           // .style('text-anchor', 'end') // places at end of axis, rather than ages away
           .style('font-size','15px')
-          .text(yLabel);
+          .text(label_text);
               
       return {'svg':svg,'x':x,'y':y,'label':yLabel,'color':color}; // the graph
   },

@@ -639,82 +639,175 @@ var spanningtree = { /* A directed, rooted spanning tree */
     - setSampleData: sets the arrival rate of the sample data, stops local loop
 */
 // var sample = scale_test_tree_1500;
-var sample2 = {
-  data: {
+var sample = {
+  "switches": [
+    {
+      "ports": [
+        {
+          "hw_addr": "c0:c2:4c:08:06:02",
+          "name": "s1-eth1",
+          "port_no": "00000001",
+          "dpid": "0000000000000001"
+        }
+      ],
+      "dpid": "0000000000000001"
+    },
+    {
+      "ports": [
+        {
+          "hw_addr": "93:a9:69:2c:02:08",
+          "name": "s2-eth1",
+          "port_no": "00000001",
+          "dpid": "0000000000000002"
+        },
+        {
+          "hw_addr": "b2:ee:35:24:cd:fa",
+          "name": "s2-eth2",
+          "port_no": "00000002",
+          "dpid": "0000000000000002"
+        }
+      ],
+      "dpid": "0000000000000002"
+    },
+    {
+      "ports": [
+        {
+          "hw_addr": "bd:f5:8e:ab:2c:da",
+          "name": "s3-eth1",
+          "port_no": "00000001",
+          "dpid": "0000000000000003"
+        }
+      ],
+      "dpid": "0000000000000003"
+    }
+  ],
+  "controller": {
+    "duration": 1,
+    "switches": [
+      {
+        "total_packet_in": 4,
+        "dpid": "0000000000000001"
+      },
+      {
+        "total_packet_in": 4,
+        "dpid": "0000000000000002"
+      },
+      {
+        "total_packet_in": 4,
+        "dpid": "0000000000000003"
+      }
+    ],
+    "up_time": 20,
+    "packet_in_total": 40,
+    "packet_in_delta": 3
+  },
+  "data": {
     "0000000000000001": [
-      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.1, "depart_rate": 101.1, "total_tx": 100, "total_rx": 100, "uptime": 0},
-      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.2, "depart_rate": 101.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
-      {"port_no": "3", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 100.2, "depart_rate": 101.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
+      {
+        "depart_rate": 101.1,
+        "total_tx": 100,
+        "rx_packets": 0,
+        "total_rx": 100,
+        "arrival_rate": 100.1,
+        "tx_packets": 0,
+        "uptime": 0,
+        "port_no": "1"
+      }
     ],
     "0000000000000002": [
-      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.1, "depart_rate": 201.1, "total_tx": 100, "total_rx": 100, "uptime": 0},
-      {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
-      {"port_no": "3", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
+      {
+        "depart_rate": 101.1,
+        "total_tx": 100,
+        "rx_packets": 0,
+        "total_rx": 100,
+        "arrival_rate": 100.1,
+        "tx_packets": 0,
+        "uptime": 0,
+        "port_no": "1"
+      },
+      {
+        "depart_rate": 101.1,
+        "total_tx": 100,
+        "rx_packets": 0,
+        "total_rx": 100,
+        "arrival_rate": 100.1,
+        "tx_packets": 0,
+        "uptime": 0,
+        "port_no": "2"
+      }
     ],
     "0000000000000003": [
-      {"port_no": "1", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.1, "depart_rate": 201.1, "total_tx": 100, "total_rx": 100, "uptime": 0},
-      // {"port_no": "2", "rx_packets": 0, "tx_packets": 0, "arrival_rate": 200.2, "depart_rate": 201.2, "total_tx": 100, "total_rx": 100, "uptime": 0},
+      {
+        "depart_rate": 101.1,
+        "total_tx": 100,
+        "rx_packets": 0,
+        "total_rx": 100,
+        "arrival_rate": 100.1,
+        "tx_packets": 0,
+        "uptime": 0,
+        "port_no": "1"
+      }
     ]
   },
-  controller: {
-    "packet_in_delta":12,
-    "packet_in_total":70,
-    "duration":1,
-    "up_time":20,
-    "switches":[
-      {"dpid":"0000000000000001","total_packet_in":12},
-      {"dpid":"0000000000000002","total_packet_in":17},
-      {"dpid":"0000000000000003","total_packet_in":5},
-    ],
-  },
-  switches: [
-    { "dpid": "0000000000000001",
-      "ports": [
-        {"hw_addr": "62:97:f2:85:7b:af", "name": "s1-eth1", "port_no": "00000001", "dpid": "0000000000000001"}, 
-        {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}, 
-        {"hw_addr": "02:5d:c1:3d:2f:23", "name": "s1-eth3", "port_no": "00000003", "dpid": "0000000000000001"}
-      ]}, 
-    { "dpid": "0000000000000002",
-      "ports": [
-        {"hw_addr": "82:bd:da:72:ca:bb", "name": "s2-eth1", "port_no": "00000001", "dpid": "0000000000000002"}, 
-        {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}, 
-        {"hw_addr": "de:14:29:11:01:23", "name": "s2-eth3", "port_no": "00000003", "dpid": "0000000000000002"}
-      ]}, 
-    { "dpid": "0000000000000003",
-      "ports": [
-        {"hw_addr": "82:bd:da:72:ca:21", "name": "s3-eth1", "port_no": "00000001", "dpid": "0000000000000003"}, 
-        // {"hw_addr": "de:14:29:11:01:22", "name": "s3-eth2", "port_no": "00000002", "dpid": "0000000000000003"}
-      ]}
-  ],
-  links: [
-    { 
-      "src": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}, 
-      "dst": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}
-    }, 
-    { 
-      "src": {"hw_addr": "02:5d:c1:3d:2f:8e", "name": "s1-eth2", "port_no": "00000002", "dpid": "0000000000000001"}, 
-      "dst": {"hw_addr": "de:14:29:11:01:61", "name": "s2-eth2", "port_no": "00000002", "dpid": "0000000000000002"}
-    }, 
-  /*{
-      'name': '1 - 3'
-      "src": {"hw_addr": "02:5d:c1:3d:2f:23", "name": "s1-eth3", "port_no": "00000003", "dpid": "0000000000000001"}, 
-      "dst": {"hw_addr": "82:bd:da:72:ca:21", "name": "s3-eth1", "port_no": "00000002", "dpid": "0000000000000003"}
+  "links": [
+    {
+      "src": {
+        "hw_addr": "c0:c2:4c:08:06:02",
+        "name": "s1-eth1",
+        "port_no": "00000001",
+        "dpid": "0000000000000001"
+      },
+      "dst": {
+        "hw_addr": "93:a9:69:2c:02:08",
+        "name": "s2-eth1",
+        "port_no": "00000001",
+        "dpid": "0000000000000002"
+      }
     },
-    { 
-      "src": {"hw_addr": "82:bd:da:72:ca:21", "name": "s3-eth1", "port_no": "00000002", "dpid": "0000000000000003"}, 
-      "dst": {"hw_addr": "02:5d:c1:3d:2f:23", "name": "s1-eth3", "port_no": "00000003", "dpid": "0000000000000001"}
+    {
+      "src": {
+        "hw_addr": "93:a9:69:2c:02:08",
+        "name": "s2-eth1",
+        "port_no": "00000001",
+        "dpid": "0000000000000002"
+      },
+      "dst": {
+        "hw_addr": "c0:c2:4c:08:06:02",
+        "name": "s1-eth1",
+        "port_no": "00000001",
+        "dpid": "0000000000000001"
+      }
     },
-  */
-    { 
-      "src": {"hw_addr": "de:14:29:11:01:23", "name": "s2-eth3", "port_no": "00000003", "dpid": "0000000000000002"}, 
-      "dst": {"hw_addr": "de:14:29:11:01:22", "name": "s3-eth2", "port_no": "00000002", "dpid": "0000000000000003"}
+    {
+      "src": {
+        "hw_addr": "b2:ee:35:24:cd:fa",
+        "name": "s2-eth2",
+        "port_no": "00000002",
+        "dpid": "0000000000000002"
+      },
+      "dst": {
+        "hw_addr": "bd:f5:8e:ab:2c:da",
+        "name": "s3-eth1",
+        "port_no": "00000001",
+        "dpid": "0000000000000003"
+      }
     },
-    { 
-      "src": {"hw_addr": "de:14:29:11:01:22", "name": "s3-eth2", "port_no": "00000002", "dpid": "0000000000000003"},
-      "dst": {"hw_addr": "de:14:29:11:01:23", "name": "s2-eth3", "port_no": "00000003", "dpid": "0000000000000002"}, 
-    },
+    {
+      "src": {
+        "hw_addr": "bd:f5:8e:ab:2c:da",
+        "name": "s3-eth1",
+        "port_no": "00000001",
+        "dpid": "0000000000000003"
+      },
+      "dst": {
+        "hw_addr": "b2:ee:35:24:cd:fa",
+        "name": "s2-eth2",
+        "port_no": "00000002",
+        "dpid": "0000000000000002"
+      }
+    }
   ]
-};
+}
 
 function setSampleArv(arv) {
     stopLocal()
