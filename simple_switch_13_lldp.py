@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+""" This application modifies the OFP 1.3 simple switch code to ignore LLDP packets.
+      By ignoring LLDP, only direct neighbours learn of one another. """
+
 from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER

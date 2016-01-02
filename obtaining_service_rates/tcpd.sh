@@ -1,3 +1,4 @@
+## Start TCPDump for eth1 and eth2 of switch 1 to monitor traffic across this path
 
 # SIZES=( 10 60 200 600 1000 1400 1460 )
 SIZES=( 600 1000 1400 1460 )
