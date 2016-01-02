@@ -7,7 +7,7 @@ from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER, CONFIG_DISP
 from ryu.controller.handler import set_ev_cls
 from ryu.controller import ofp_event
 from ryu.lib.packet.ether_types import ETH_TYPE_LLDP
-from ryu.lib.packet import (packet,  ethernet)
+from ryu.lib.packet import (packet, ethernet)
 
 from socket import error as SocketError
 from tinyrpc.exc import InvalidReplyError
@@ -19,8 +19,6 @@ from performance_server import PerformanceServerController
 
 import calendar, time
 
-# from ryu.topology.api import get_switch, get_link
-# import json
 
 class PerformanceServerApp(app_manager.RyuApp):
     _CONTEXTS = {
