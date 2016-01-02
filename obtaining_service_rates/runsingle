@@ -1,2 +1,3 @@
+## starts mininet with a single switch
 sudo mn -c
 sudo mn --controller remote  --mac --topo single --switch ovsk,protocols=OpenFlow13
