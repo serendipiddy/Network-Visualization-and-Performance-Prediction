@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # set these three before use!
-SRC="/home/mininet/nvpp" # directory of the visualisation app
-RYU="/home/mininet/ryu" # Root directory of Ryu
+SRC="/home/nvpp" # directory of the visualisation app
+RYU="/home/ryu" # Root directory of Ryu
 DST=$RYU"/ryu/app/" # Ryu app directory
 
 echo 'Copying from '$SRC' to '$DST
