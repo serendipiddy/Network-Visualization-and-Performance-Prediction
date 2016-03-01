@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # set these three before use!
-SRC="/home/mininet/vis" # directory of the visualisation app
+SRC="/home/mininet/nvpp" # directory of the visualisation app
 RYU="/home/mininet/ryu" # Root directory of Ryu
 DST=$RYU"/ryu/app/" # Ryu app directory
 
