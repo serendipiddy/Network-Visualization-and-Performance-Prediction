@@ -4,16 +4,17 @@ var CONF = {
         height: 40
     },
     force: {
-        // width: 700,
-        // width: $(window).width()-250, // 250 for control panel
         width: $(window).width()-250-300, // for tests, make this static -vis.graphs.w_border, // 250 is for control panel and scroll bar
         height: 500,
-        dist: 200,
-        charge: -600
+        dist: 190,
+        charge: -1000
     },
     node: {
         radius: 20,
         size: 20
+    },
+    port: {
+        radius: 4
     }
 };
 
@@ -55,31 +56,31 @@ var elem = {
         .attr("width", CONF.force.width)
         .attr("height", CONF.force.height),
 };
+/* Returns the translation string for movements.  */
+function movement(dx, dy, radius) {
+  dx = Math.max(radius, Math.min(CONF.force.width - radius, dx));
+  dy = Math.max(radius, Math.min(CONF.force.height - radius, dy));
+  return "translate(" + dx + "," + dy + ")";
+}
+
 function _tick() {
     elem.link.attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
         .attr("x2", function(d) { return d.target.x; })
         .attr("y2", function(d) { return d.target.y; });
 
-    elem.node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-    elem.stats.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+    elem.node.attr("transform", function(d) { return movement(d.x, d.y, CONF.node.radius); });
+    elem.stats.attr("transform", function(d) { return movement(d.x, d.y, CONF.node.radius); });
     elem.port.attr("transform", function(d) {
         var p = topo.get_port_point(d);
-        return "translate(" + p.x + "," + p.y + ")";
+        return movement(p.x, p.y, CONF.port.radius);
     });
 }
 elem.drag = elem.force.drag().on("dragstart", _dragstart);
 function _dragstart(d) {
     var dpid = dpid_to_int(d.dpid)
-    // d3.json("/v1.0/performance/current", function(e, data) {
-        // flows = data[d.dpid];
-        // elem.console.selectAll("p")
-            // .remove();
-        // p = elem.console.append("p")
-            // .text(function() {return JSON.stringify(flows);});
-    // });
-    
-    d3.select(this).classed("fixed", d.fixed = true);
+
+    // d3.select(this).classed("fixed", d.fixed = true);  // 'stick' nodes when clicked
 }
 elem.node = elem.svg.selectAll(".node");
 elem.link = elem.svg.selectAll(".link");
@@ -122,17 +123,6 @@ elem.update = function () {
             return -CONF.node.size/2+(4*length);
         })
         .text(function(d) { return trim_zero(d.dpid); });
-    /* nodeEnter.append("image")
-        // .attr("xlink:href", "./router.svg")
-        // .attr("x", -CONF.image.width/2)
-        // .attr("y", -CONF.image.height/2)
-        // .attr("width", CONF.image.width)
-        // .attr("height", CONF.image.height);
-    // nodeEnter.append("text")
-        // .attr("dx", -CONF.image.width/2)
-        // .attr("dy", CONF.image.height-10)
-        // .text(function(d) { return "dpid: " + trim_zero(d.dpid); });
-    */
     
     /* Statistics */
     vis.set_gui_text(this, topo.nodes);
@@ -145,7 +135,7 @@ elem.update = function () {
     var portEnter = this.port.enter().append("g")
         .attr("class", "port");
     portEnter.append("circle")
-        .attr("r", 8);
+        .attr("r", CONF.port.radius*2);
     portEnter.append("text")
         .attr("dx", -3)
         .attr("dy", 3)
@@ -153,7 +143,6 @@ elem.update = function () {
 };
 
 function is_valid_link(link) {
-    // console.log('validate link: '+link.src.dpid+' < '+link.dst.dpid+' '+(link.src.dpid < link.dst.dpid))
     return (link.src.dpid < link.dst.dpid)
 }
 

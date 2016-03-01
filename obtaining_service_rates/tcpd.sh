@@ -4,8 +4,8 @@
 SIZES=( 600 1000 1400 1460 )
 
 for i in '${SIZES[@]}'
-  tcpdump -c201 -i s1-eth1 --time-stamp-precision=nano -nn > ~test.dump &
-  tcpdump -c201 -i s1-eth2 --time-stamp-precision=nano -nn > ~test.dump
+  tcpdump -c201 -i s1-eth1 --time-stamp-precision=nano -nn > ~s1-eth1.dump &
+  tcpdump -c201 -i s1-eth2 --time-stamp-precision=nano -nn > ~s1-eth2.dump
   sleep 1
 done 
 
