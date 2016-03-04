@@ -197,7 +197,7 @@ var vis = {
   },
   update_live_arrival_value: function () {
       var dpid = $('#node-select').val();
-      if (dpid === 'default') return;
+      if (dpid === 'default' || dpid === undefined) return;
       var live = pf_data.live_data[dpid];
       $('#node-arrival-rate').html(live.aggregate.arrival_rate);
   },
