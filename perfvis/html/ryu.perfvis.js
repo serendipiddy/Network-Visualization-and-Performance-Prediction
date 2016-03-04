@@ -80,7 +80,7 @@ elem.drag = elem.force.drag().on("dragstart", _dragstart);
 function _dragstart(d) {
     var dpid = dpid_to_int(d.dpid)
 
-    // d3.select(this).classed("fixed", d.fixed = true);  // 'stick' nodes when clicked
+    d3.select(this).classed("fixed", d.fixed = true);  // 'stick' nodes when clicked
 }
 elem.node = elem.svg.selectAll(".node");
 elem.link = elem.svg.selectAll(".link");
